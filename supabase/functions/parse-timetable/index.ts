@@ -8,6 +8,25 @@ Return ONLY a JSON array, no prose, no markdown fences. Each item must look like
 {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 0-6 (0=Sunday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}
 If a cell spans a lab block, mark type as "lab". If you cannot read a cell confidently, skip it rather than guessing.`;
 
+async function callGemini(apiKey: string, model: string, mimeType: string, base64Data: string) {
+  return await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: PROMPT },
+            { inline_data: { mime_type: mimeType, data: base64Data } }
+          ]
+        }],
+        generationConfig: { temperature: 0.1 }
+      })
+    }
+  );
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -34,28 +53,30 @@ Deno.serve(async (req) => {
       );
     }
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: PROMPT },
-              { inline_data: { mime_type, data: image_base64 } }
-            ]
-          }],
-          generationConfig: { temperature: 0.1 }
-        })
-      }
-    );
+    // Try primary model (gemini-2.0-flash), fallback to gemini-1.5-flash on rate limit
+    let geminiRes = await callGemini(geminiKey, "gemini-2.0-flash", mime_type, image_base64);
+
+    if (geminiRes.status === 429) {
+      geminiRes = await callGemini(geminiKey, "gemini-1.5-flash", mime_type, image_base64);
+    }
 
     if (!geminiRes.ok) {
       const errText = await geminiRes.text();
+      let msg = "Gemini API request failed.";
+      try {
+        const parsedErr = JSON.parse(errText);
+        if (parsedErr.error && parsedErr.error.message) {
+          msg = parsedErr.error.message;
+        }
+      } catch (_) { }
+
+      if (geminiRes.status === 429) {
+        msg = "Gemini API Rate Limit Exceeded (HTTP 429). Free-tier quota limit reached. Please wait ~40 seconds before retrying.";
+      }
+
       return new Response(
-        JSON.stringify({ error: "Gemini API request failed.", detail: errText }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: msg }),
+        { status: geminiRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
