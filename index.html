@@ -3165,7 +3165,7 @@
               // Fallback to direct Gemini API call if stored key exists
               if (!data && geminiKey) {
                 var PROMPT = 'You are reading a college timetable image. Extract every class slot you can see. Return ONLY a JSON array, no prose, no markdown fences. Each item must look like: {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 0-6 (0=Sunday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}';
-                var models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+                var models = ['gemini-3.5-flash-lite', 'gemini-2.5-flash'];
                 var gRes = null;
 
                 for (var m = 0; m < models.length; m++) {
@@ -3324,6 +3324,16 @@
         },
 
         enable: async function () {
+          var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+          var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+          if (isIOS && !isStandalone) {
+            showStatus('On iPhone, notifications only work once this is added to your Home Screen. Tap Share → Add to Home Screen, then open Attendily from that icon and try again.', true);
+            var input0 = document.getElementById('pushToggle');
+            if (input0) input0.checked = false;
+            return false;
+          }
+
           if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
             showStatus('Push notifications are not supported on this browser or device.', true);
             return false;
@@ -3331,10 +3341,10 @@
           try {
             var permission = await Notification.requestPermission();
             if (permission !== 'granted') {
-              showStatus('Notification permission was not granted.', true);
+              showStatus('Notification permission was not granted. Check your device/browser notification settings for this site.', true);
               return false;
             }
-            var reg = await navigator.serviceWorker.register('sw.js');
+            var reg = await navigator.serviceWorker.register('sw.js', { scope: './' });
             var vapidKey = window.VAPID_PUBLIC_KEY || '';
             if (!vapidKey) { showStatus('Notifications are not configured yet.', true); return false; }
             var sub = await reg.pushManager.subscribe({
