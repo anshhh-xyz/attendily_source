@@ -33,14 +33,14 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return new Response("Method not allowed", { status: 405, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
   if (!geminiKey) {
     return new Response(
       JSON.stringify({ error: "GEMINI_API_KEY is missing in Supabase Edge Function secrets." }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 
@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     if (!image_base64 || !mime_type) {
       return new Response(
         JSON.stringify({ error: "image_base64 and mime_type are required." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -71,12 +71,12 @@ Deno.serve(async (req) => {
       } catch (_) { }
 
       if (geminiRes.status === 429) {
-        msg = "Gemini API Rate Limit Exceeded (HTTP 429). Free-tier quota limit reached. Please wait ~40 seconds before retrying.";
+        msg = "Gemini API Quota Exceeded (HTTP 429): Google free-tier rate limit reached. Please wait ~40 seconds before retrying.";
       }
 
       return new Response(
         JSON.stringify({ error: msg }),
-        { status: geminiRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -90,18 +90,18 @@ Deno.serve(async (req) => {
     } catch {
       return new Response(
         JSON.stringify({ error: "Could not parse Gemini output into timetable JSON.", raw: rawText }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     return new Response(
       JSON.stringify({ classes: parsed }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
     return new Response(
       JSON.stringify({ error: e.message || "Failed to process request" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
