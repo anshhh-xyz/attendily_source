@@ -2450,37 +2450,69 @@
             showStatus("Couldn't mark cancelled: " + e.message, true);
           }
         },
-        uploadTimetable: async function (file) {
+        uploadTimetable: async function (file, customKey) {
           if (!file) return;
           var mount = document.getElementById('importDraftMount');
           mount.innerHTML = '<div style="padding:14px; text-align:center;"><span class="spinner"></span> Parsing timetable photo with Gemini AI...</div>';
           var reader = new FileReader();
           reader.onload = async function () {
             var base64 = reader.result.split(',')[1];
+            var geminiKey = customKey || localStorage.getItem('attendily_gemini_key') || window.GEMINI_API_KEY;
+
             try {
               var data = null;
-              if (supabase && supabase.functions && typeof supabase.functions.invoke === 'function') {
+
+              // Try Supabase Edge Function first if no custom key provided
+              if (!customKey && supabase && supabase.functions && typeof supabase.functions.invoke === 'function') {
                 var invokeRes = await supabase.functions.invoke('parse-timetable', {
                   body: { image_base64: base64, mime_type: file.type }
                 });
-                if (invokeRes.error) {
-                  var errMsg = invokeRes.error.message || 'Gemini timetable parsing failed';
-                  if (invokeRes.data && invokeRes.data.error) errMsg = invokeRes.data.error;
-                  throw new Error(errMsg);
+
+                if (!invokeRes.error && invokeRes.data && invokeRes.data.classes) {
+                  data = invokeRes.data;
                 }
-                data = invokeRes.data;
-              } else {
-                var sessionRes = await supabase.auth.getSession();
-                var token = sessionRes.data && sessionRes.data.session ? sessionRes.data.session.access_token : '';
-                var res = await fetch(SUPABASE_URL + '/functions/v1/parse-timetable', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                  body: JSON.stringify({ image_base64: base64, mime_type: file.type })
-                });
-                data = await res.json();
-                if (data.error) throw new Error(data.error);
               }
-              if (!data || !data.classes) throw new Error('No class data returned from timetable image.');
+
+              // Fallback to direct Gemini API call if stored key exists
+              if (!data && geminiKey) {
+                var PROMPT = 'You are reading a college timetable image. Extract every class slot you can see. Return ONLY a JSON array, no prose, no markdown fences. Each item must look like: {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 0-6 (0=Sunday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}';
+                var gRes = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + geminiKey, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    contents: [{ parts: [{ text: PROMPT }, { inline_data: { mime_type: file.type, data: base64 } }] }]
+                  })
+                });
+
+                if (!gRes.ok) {
+                  var errText = await gRes.text();
+                  throw new Error('Gemini API error: ' + errText);
+                }
+
+                var gData = await gRes.json();
+                var rawText = gData.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
+                var cleaned = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+                var parsed = JSON.parse(cleaned);
+                data = { classes: parsed };
+              }
+
+              // If no edge function deployed and no key provided, prompt user for key
+              if (!data || !data.classes) {
+                window._pendingTimetableFile = file;
+                mount.innerHTML =
+                  '<div style="margin-top:12px; background:var(--panel-2); border:1px solid var(--line); padding:14px; display:flex; flex-direction:column; gap:10px; text-align:left;">' +
+                  '<div style="font-size:12.5px; font-weight:600; color:var(--orange);">Edge Function Not Deployed to Supabase</div>' +
+                  '<div style="font-size:11.5px; color:var(--text-dim); line-height:1.4;">' +
+                  'The Supabase Edge Function <code>parse-timetable</code> is not deployed yet.<br/><br/>' +
+                  '<b>Option 1:</b> Deploy via Supabase CLI:<br/><code style="color:var(--pink);">npx supabase functions deploy parse-timetable --no-verify-jwt</code><br/><br/>' +
+                  '<b>Option 2:</b> Enter your Gemini API Key below to parse directly:' +
+                  '</div>' +
+                  '<input type="password" id="geminiApiKeyInput" placeholder="Paste Gemini API Key (AIzaSy...)" style="background:var(--panel); border:1px solid var(--line); color:var(--text); padding:8px 10px; font-size:12px; width:100%;"/>' +
+                  '<button class="submit-btn" style="padding:8px 0;" onclick="SCHEDULE.saveGeminiKeyAndRetry()">Save Key & Parse Timetable</button>' +
+                  '</div>';
+                return;
+              }
+
               importDraft = data.classes;
               renderImportDraft();
             } catch (e) {
@@ -2488,6 +2520,16 @@
             }
           };
           reader.readAsDataURL(file);
+        },
+
+        saveGeminiKeyAndRetry: function () {
+          var input = document.getElementById('geminiApiKeyInput');
+          var key = input ? input.value.trim() : '';
+          if (!key) { if (input) input.focus(); return; }
+          localStorage.setItem('attendily_gemini_key', key);
+          if (window._pendingTimetableFile) {
+            SCHEDULE.uploadTimetable(window._pendingTimetableFile, key);
+          }
         },
         confirmImport: async function () {
           if (!importDraft) return;
