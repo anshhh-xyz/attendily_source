@@ -2468,7 +2468,17 @@
                   body: { image_base64: base64, mime_type: file.type }
                 });
 
-                if (!invokeRes.error && invokeRes.data && invokeRes.data.classes) {
+                if (invokeRes.error) {
+                  console.error('Supabase Edge Function response error:', invokeRes.error);
+                  var errDetail = invokeRes.error.message || 'Edge function error';
+                  if (invokeRes.data && invokeRes.data.error) errDetail = invokeRes.data.error;
+                  if (invokeRes.error.status === 404 || errDetail.indexOf('Failed to send') !== -1) {
+                    // Function not found on server backend
+                    data = null;
+                  } else {
+                    throw new Error('Supabase Edge Function: ' + errDetail);
+                  }
+                } else if (invokeRes.data && invokeRes.data.classes) {
                   data = invokeRes.data;
                 }
               }
@@ -2501,11 +2511,11 @@
                 window._pendingTimetableFile = file;
                 mount.innerHTML =
                   '<div style="margin-top:12px; background:var(--panel-2); border:1px solid var(--line); padding:14px; display:flex; flex-direction:column; gap:10px; text-align:left;">' +
-                  '<div style="font-size:12.5px; font-weight:600; color:var(--orange);">Edge Function Not Deployed to Supabase</div>' +
+                  '<div style="font-size:12.5px; font-weight:600; color:var(--orange);">Edge Function Not Reachable</div>' +
                   '<div style="font-size:11.5px; color:var(--text-dim); line-height:1.4;">' +
-                  'The Supabase Edge Function <code>parse-timetable</code> is not deployed yet.<br/><br/>' +
-                  '<b>Option 1:</b> Deploy via Supabase CLI:<br/><code style="color:var(--pink);">npx supabase functions deploy parse-timetable --no-verify-jwt</code><br/><br/>' +
-                  '<b>Option 2:</b> Enter your Gemini API Key below to parse directly:' +
+                  'The function <code>parse-timetable</code> could not be reached on your Supabase backend.<br/><br/>' +
+                  '<b>Step 1:</b> Deploy via Supabase CLI:<br/><code style="color:var(--pink);">npx supabase functions deploy parse-timetable --no-verify-jwt</code><br/><br/>' +
+                  '<b>Step 2:</b> Or enter your Gemini API Key below to parse directly:' +
                   '</div>' +
                   '<input type="password" id="geminiApiKeyInput" placeholder="Paste Gemini API Key (AIzaSy...)" style="background:var(--panel); border:1px solid var(--line); color:var(--text); padding:8px 10px; font-size:12px; width:100%;"/>' +
                   '<button class="submit-btn" style="padding:8px 0;" onclick="SCHEDULE.saveGeminiKeyAndRetry()">Save Key & Parse Timetable</button>' +
