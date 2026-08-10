@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap"
     rel="stylesheet">
   <style>
     :root {
@@ -150,21 +150,22 @@
     }
 
     .brand-mark-wrap {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--panel-2);
-      border: 1px solid var(--line);
+      background: #000000;
+      border: 1px solid var(--primary);
     }
 
+    .brand-word,
     .brand-word.top {
       font-family: 'Inter', sans-serif;
-      font-weight: 500;
-      font-size: 18px;
+      font-weight: 800 !important;
+      font-size: 19px;
       color: #ffffff;
-      letter-spacing: -.02em;
+      letter-spacing: -.03em;
     }
 
     .topbar-actions {
@@ -227,7 +228,7 @@
 
     .auth-title {
       font-size: 19px;
-      font-weight: 500;
+      font-weight: 600;
       margin: 6px 0 0;
       color: var(--text);
       letter-spacing: -.01em;
@@ -506,7 +507,7 @@
       letter-spacing: .12em;
       text-transform: uppercase;
       color: var(--pink);
-      font-weight: 500;
+      font-weight: 600;
     }
 
     .overall-main {
@@ -565,7 +566,7 @@
       background: rgba(249, 115, 22, 0.12);
       border-color: var(--orange);
       color: var(--orange);
-      font-weight: 500;
+      font-weight: 600;
     }
 
     .day-badge {
@@ -585,7 +586,7 @@
     @media (max-width: 640px) {
       .days-nav {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 6px;
       }
     }
@@ -604,7 +605,7 @@
 
     .day-action-title {
       font-size: 14.5px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--text);
     }
 
@@ -667,7 +668,7 @@
       align-items: center;
       justify-content: space-between;
       font-size: 11px;
-      font-weight: 400;
+      font-weight: 500;
       color: var(--text-dim);
       text-transform: uppercase;
       letter-spacing: .06em;
@@ -804,7 +805,7 @@
       display: inline-block;
       margin-top: 4px;
       font-size: 10px;
-      font-weight: 500;
+      font-weight: 600;
       letter-spacing: .04em;
       text-transform: uppercase;
       padding: 1px 6px;
@@ -880,7 +881,7 @@
     .stepval {
       font-family: 'JetBrains Mono', monospace;
       font-size: 13.5px;
-      font-weight: 400;
+      font-weight: 500;
       width: 24px;
       text-align: center;
       transition: color .2s ease;
@@ -958,7 +959,7 @@
 
     .ring-num .n {
       font-family: 'JetBrains Mono', monospace;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--text);
       display: block;
       line-height: 1;
@@ -993,7 +994,7 @@
 
     .panel-form-head span {
       font-size: 15px;
-      font-weight: 500;
+      font-weight: 600;
     }
 
     .panel-form-head button {
@@ -1038,7 +1039,7 @@
 
     .time-picker-title {
       font-size: 11px;
-      font-weight: 400;
+      font-weight: 500;
       color: var(--text-dim);
       display: flex;
       align-items: center;
@@ -1050,7 +1051,7 @@
     .time-duration-badge {
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
-      font-weight: 400;
+      font-weight: 500;
       color: var(--orange);
       background: rgba(249, 115, 22, 0.12);
       padding: 2px 6px;
@@ -1104,7 +1105,7 @@
     .ampm-btn.active {
       background: var(--pink);
       color: #ffffff;
-      font-weight: 500;
+      font-weight: 600;
     }
 
     /* Fixed Rectangular Modal Overlay for Upload Schedule */
@@ -1168,18 +1169,18 @@
       border-color: var(--pink);
       background: rgba(236, 72, 153, 0.12);
       color: var(--pink);
-      font-weight: 500;
+      font-weight: 600;
     }
 
     .submit-btn {
       margin-top: 4px;
-      padding: 10px 0;
+      padding: 10.5px 0;
       border: 1px solid var(--primary);
       cursor: pointer;
       background: var(--primary);
       color: #ffffff;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
       transition: background .15s ease;
     }
 
@@ -1262,10 +1263,10 @@
     <div class="topbar" id="topbar">
       <div class="brand">
         <div class="brand-mark-wrap">
-          <svg width="18" height="18" viewBox="0 0 30 30">
-            <circle cx="15" cy="15" r="12" fill="none" stroke="var(--line)" stroke-width="3" />
-            <circle cx="15" cy="15" r="12" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round"
-              stroke-dasharray="56 75.4" transform="rotate(-90 15 15)" />
+          <svg width="20" height="20" viewBox="0 0 30 30">
+            <circle cx="15" cy="15" r="11" fill="none" stroke="var(--line)" stroke-width="4.5" />
+            <circle cx="15" cy="15" r="11" fill="none" stroke="var(--primary)" stroke-width="4.5" stroke-linecap="round"
+              stroke-dasharray="50 69.1" transform="rotate(-90 15 15)" />
           </svg>
         </div>
         <div class="brand-word top">Attendily</div>
@@ -1323,8 +1324,8 @@
       var schedule = [];
       var loaded = false;
       var showAdd = false;
-      var addPresetDay = null; // null = overall, or number 1-6
-      var activeDayTab = 'all'; // 'all' or number 1-6
+      var addPresetDay = 1; // 1-6
+      var activeDayTab = 1; // 1-6 (Default Mon)
       var currentUser = null;
       var firstRender = true;
 
@@ -1333,7 +1334,7 @@
 
       var DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       var DAY_FULL_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      // Sunday is excluded from premade option (Mon=1, Tue=2, Wed=3, Thu=4, Fri=5, Sat=6)
+      // Mon=1, Tue=2, Wed=3, Thu=4, Fri=5, Sat=6 (Sunday completely removed from premade tabs)
       var DAY_ORDER = [1, 2, 3, 4, 5, 6];
 
       // Time picker state (12-hour format with AM/PM)
@@ -1360,12 +1361,12 @@
         var brandBlock =
           '<div class="brand">' +
           '<div class="brand-mark-wrap">' +
-          '<svg width="18" height="18" viewBox="0 0 30 30">' +
-          '<circle cx="15" cy="15" r="12" fill="none" stroke="var(--line)" stroke-width="3"/>' +
-          '<circle cx="15" cy="15" r="12" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" stroke-dasharray="56 75.4" transform="rotate(-90 15 15)"/>' +
+          '<svg width="20" height="20" viewBox="0 0 30 30">' +
+          '<circle cx="15" cy="15" r="11" fill="none" stroke="var(--line)" stroke-width="4.5"/>' +
+          '<circle cx="15" cy="15" r="11" fill="none" stroke="var(--primary)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="50 69.1" transform="rotate(-90 15 15)"/>' +
           '</svg>' +
           '</div>' +
-          '<div><div class="brand-word" style="font-size:18px; font-weight:500;">Attendily</div></div>' +
+          '<div><div class="brand-word" style="font-size:19px; font-weight:800;">Attendily</div></div>' +
           '</div>';
 
         if (authMode === 'forgot') {
@@ -1567,7 +1568,7 @@
           showAdd = false;
           pwPanelOpen = false;
           firstRender = true;
-          activeDayTab = 'all';
+          activeDayTab = 1;
           document.getElementById('appShell').classList.add('hidden');
           document.getElementById('authShell').classList.remove('hidden');
           authMode = 'signin';
@@ -1604,9 +1605,9 @@
         document.getElementById('appShell').classList.remove('hidden');
         document.getElementById('userEmailLabel').textContent = user.email;
 
-        // Set default active tab to today (if Sunday, default to All Days)
+        // Set default active tab to current day (Mon-Sat, default to Mon if Sun)
         var todayIndex = new Date().getDay();
-        activeDayTab = (todayIndex === 0) ? 'all' : todayIndex;
+        activeDayTab = (todayIndex >= 1 && todayIndex <= 6) ? todayIndex : 1;
 
         loadData();
         checkConfirmParam();
@@ -1766,6 +1767,10 @@
 
       function selectDayTab(day) {
         activeDayTab = day;
+        // Fix: Sync addPresetDay to current day when switching tabs with Add Form open
+        if (showAdd) {
+          addPresetDay = day;
+        }
         render();
       }
       window.selectDayTab = selectDayTab;
@@ -1774,15 +1779,7 @@
         var mount = document.getElementById('daysNavMount');
         var html = '';
 
-        // "All Days" Tab
-        var totalSubjectsCount = subjects.length;
-        var isAllActive = activeDayTab === 'all';
-        html += '<button class="day-tab ' + (isAllActive ? 'active' : '') + '" onclick="selectDayTab(\'all\')">' +
-          '<span>All Days</span>' +
-          '<span class="day-badge">' + totalSubjectsCount + '</span>' +
-          '</button>';
-
-        // Mon - Sat Tabs (Excluding Sunday)
+        // Mon - Sat Tabs Only ("All Days" tab completely removed as requested)
         DAY_ORDER.forEach(function (day) {
           var count = schedule.filter(function (c) { return c.day_of_week === day; }).length;
           var isActive = activeDayTab === day;
@@ -1797,40 +1794,33 @@
 
       function renderDayActionBar() {
         var mount = document.getElementById('dayActionBarMount');
-        if (activeDayTab === 'all') {
-          mount.innerHTML =
-            '<div class="day-action-bar">' +
-            '<div class="day-action-title">All Subjects (' + subjects.length + ')</div>' +
-            '<button class="addbtn primary-action" onclick="toggleAddForm(null)">+ Add subject</button>' +
-            '</div>';
-        } else {
-          var dayName = DAY_FULL_NAMES[activeDayTab];
-          var daySlots = schedule.filter(function (c) { return c.day_of_week === activeDayTab; });
-          var daySubjectIds = daySlots.map(function (s) { return s.subject_id; });
+        var dayName = DAY_FULL_NAMES[activeDayTab];
+        var daySlots = schedule.filter(function (c) { return c.day_of_week === activeDayTab; });
+        var daySubjectIds = daySlots.map(function (s) { return s.subject_id; });
 
-          var allDayNotifsMuted = daySubjectIds.length > 0 && daySubjectIds.every(function (id) { return mutedSubjectIds.includes(id); });
+        var allDayNotifsMuted = daySubjectIds.length > 0 && daySubjectIds.every(function (id) { return mutedSubjectIds.includes(id); });
 
-          mount.innerHTML =
-            '<div class="day-action-bar">' +
-            '<div class="day-action-title">' + dayName + '\'s Schedule (' + daySlots.length + ' class' + (daySlots.length !== 1 ? 'es' : '') + ')</div>' +
-            '<div style="display:flex; gap:8px;">' +
-            '<button class="ghost-btn" onclick="AT.toggleNotifForDay(' + activeDayTab + ')">' + (allDayNotifsMuted ? 'Enable Day Notifs' : 'Mute Day Notifs') + '</button>' +
-            '<button class="addbtn primary-action" onclick="toggleAddForm(' + activeDayTab + ')">+ Add subject to ' + DAY_NAMES[activeDayTab] + '</button>' +
-            '</div>' +
-            '</div>';
-        }
+        mount.innerHTML =
+          '<div class="day-action-bar">' +
+          '<div class="day-action-title">' + dayName + '\'s Schedule (' + daySlots.length + ' class' + (daySlots.length !== 1 ? 'es' : '') + ')</div>' +
+          '<div style="display:flex; gap:8px;">' +
+          '<button class="ghost-btn" onclick="AT.toggleNotifForDay(' + activeDayTab + ')">' + (allDayNotifsMuted ? 'Enable Day Notifs' : 'Mute Day Notifs') + '</button>' +
+          '<button class="addbtn primary-action" onclick="toggleAddForm(' + activeDayTab + ')">+ Add subject to ' + DAY_NAMES[activeDayTab] + '</button>' +
+          '</div>' +
+          '</div>';
       }
 
       var addFormType = 'theory';
-      var addFormSetTime = false;
+      var addFormSetTime = true;
 
       function toggleAddForm(presetDay) {
-        if (showAdd && addPresetDay === presetDay) {
+        var targetDay = (presetDay !== null && presetDay !== undefined) ? presetDay : activeDayTab;
+        if (showAdd && addPresetDay === targetDay) {
           showAdd = false;
         } else {
           showAdd = true;
-          addPresetDay = presetDay !== undefined ? presetDay : null;
-          addFormSetTime = addPresetDay !== null;
+          addPresetDay = targetDay;
+          addFormSetTime = true;
         }
         render();
       }
@@ -1916,43 +1906,32 @@
 
         if (addBtn) addBtn.classList.add('active');
 
-        var isDayPreset = addPresetDay !== null && addPresetDay !== undefined;
+        var targetDay = addPresetDay || activeDayTab;
+        var headerTitle = 'Add Subject (' + DAY_FULL_NAMES[targetDay] + ')';
 
-        var headerTitle = isDayPreset
-          ? (addPresetDay === 'all' ? 'Add Subject to All Days (Mon–Sat)' : 'Add Subject to ' + DAY_FULL_NAMES[addPresetDay])
-          : 'New Subject';
+        // Render Day Checklist Grid with current active day pre-selected
+        var dayChecklistHTML = DAY_ORDER.map(function (d) {
+          var isChecked = (d === targetDay);
+          return (
+            '<label class="day-check-item ' + (isChecked ? 'checked' : '') + '">' +
+            '<input type="checkbox" class="day-checkbox" value="' + d + '" ' + (isChecked ? 'checked' : '') + ' onchange="updateDayCheckStyle(this)"/>' +
+            '<span>' + DAY_NAMES[d] + '</span>' +
+            '</label>'
+          );
+        }).join('');
 
-        var presetNotice = isDayPreset
-          ? '<div style="font-size:11.5px; font-weight:400; color:var(--orange); background:rgba(249,115,22,0.1); padding:7px 10px; border:1px solid rgba(249,115,22,0.3);">' +
-          'Automatically adding to ' + (addPresetDay === 'all' ? 'All Days (Mon–Sat)' : DAY_FULL_NAMES[addPresetDay]) +
-          '</div>'
-          : '';
-
-        // Day Checklist HTML only displayed when adding from "ALL Days" tab (not when preset for a specific day)
-        var dayChecklistSection = '';
-        if (!isDayPreset) {
-          var dayChecklistHTML = DAY_ORDER.map(function (d) {
-            return (
-              '<label class="day-check-item checked">' +
-              '<input type="checkbox" class="day-checkbox" value="' + d + '" checked onchange="updateDayCheckStyle(this)"/>' +
-              '<span>' + DAY_NAMES[d] + '</span>' +
-              '</label>'
-            );
-          }).join('');
-
-          dayChecklistSection =
-            '<div class="days-checklist-box">' +
-            '<div class="days-checklist-header">' +
-            '<span>Select Days</span>' +
-            '<div style="display:flex; gap:6px;">' +
-            '<button type="button" class="link-btn" onclick="toggleCheckAllDays(true)">Select All</button>' +
-            '<span style="color:var(--line);">|</span>' +
-            '<button type="button" class="link-btn muted" onclick="toggleCheckAllDays(false)">Clear</button>' +
-            '</div>' +
-            '</div>' +
-            '<div class="days-checklist-grid">' + dayChecklistHTML + '</div>' +
-            '</div>';
-        }
+        var dayChecklistSection =
+          '<div class="days-checklist-box">' +
+          '<div class="days-checklist-header">' +
+          '<span>Schedule Days</span>' +
+          '<div style="display:flex; gap:6px;">' +
+          '<button type="button" class="link-btn" onclick="toggleCheckAllDays(true)">Select All</button>' +
+          '<span style="color:var(--line);">|</span>' +
+          '<button type="button" class="link-btn muted" onclick="toggleCheckAllDays(false)">Clear</button>' +
+          '</div>' +
+          '</div>' +
+          '<div class="days-checklist-grid">' + dayChecklistHTML + '</div>' +
+          '</div>';
 
         // 12-Hour options (1 to 12)
         var hourOptions = '';
@@ -1969,7 +1948,6 @@
         mount.innerHTML =
           '<div class="panel-form">' +
           '<div class="panel-form-head"><span>' + headerTitle + '</span><button onclick="AT.closeAdd()">&#10005;</button></div>' +
-          presetNotice +
           '<input type="text" id="newSubjectName" placeholder="Subject name (e.g. Mathematics)" maxlength="40"/>' +
           '<div class="type-row">' +
           '<button type="button" class="type-btn ' + (addFormType === 'theory' ? 'active' : '') + '" onclick="AT.setType(\'theory\')">Theory</button>' +
@@ -1979,12 +1957,7 @@
           '<span class="lbl">Required Attendance</span>' +
           '<div class="mininput-wrap"><input class="mininput" type="number" id="newSubjectMin" min="0" max="100" value="75"/><span class="pct-sign">%</span></div>' +
           '</div>' +
-          (!isDayPreset ? (
-            '<label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-dim); cursor:pointer;">' +
-            '<input type="checkbox" id="newSubjectSetTime" ' + (addFormSetTime ? 'checked' : '') + ' onchange="AT.toggleTimeFields(this.checked)"/> Set class days & time' +
-            '</label>'
-          ) : '<input type="checkbox" id="newSubjectSetTime" checked style="display:none;"/>') +
-          '<div id="newSubjectTimeFields" class="' + (addFormSetTime || isDayPreset ? '' : 'hidden') + '" style="display:flex; flex-direction:column; gap:10px;">' +
+          '<div id="newSubjectTimeFields" style="display:flex; flex-direction:column; gap:10px;">' +
           dayChecklistSection +
           '<div class="time-picker-box">' +
           '<div class="time-picker-title"><span>Interactive Class Timing</span><span class="time-duration-badge" id="timeDurationBadge">1h 0m</span></div>' +
@@ -2036,40 +2009,31 @@
       function renderMain() {
         var mount = document.getElementById('mainMount');
         if (subjects.length === 0) {
-          mount.innerHTML = showAdd ? '' : '<div class="empty">No subjects added yet. Click "+ Add subject" to start.</div>';
+          mount.innerHTML = showAdd ? '' : '<div class="empty">No subjects added yet. Click "+ Add subject to ' + DAY_NAMES[activeDayTab] + '" to start.</div>';
           return;
         }
 
         var cardIndex = 0;
         var html = '';
 
-        if (activeDayTab === 'all') {
-          // Show all subjects
+        // Show subjects scheduled on activeDayTab
+        var daySlots = schedule.filter(function (c) { return c.day_of_week === activeDayTab; })
+          .sort(function (a, b) { return a.start_time.localeCompare(b.start_time); });
+
+        if (daySlots.length === 0) {
+          html = '<div class="empty">' +
+            '<div style="font-size:14.5px; font-weight:600; color:var(--text); margin-bottom:4px;">No classes scheduled for ' + DAY_FULL_NAMES[activeDayTab] + '</div>' +
+            '<div style="margin-bottom:14px; font-size:12.5px;">Click below to add a class for this day.</div>' +
+            '<button class="addbtn primary-action" onclick="toggleAddForm(' + activeDayTab + ')">+ Add subject to ' + DAY_NAMES[activeDayTab] + '</button>' +
+            '</div>';
+        } else {
           html = '<div class="grid">';
-          subjects.forEach(function (s) {
-            html += cardHTML(s, cardIndex++, null);
+          daySlots.forEach(function (slot) {
+            var s = subjects.find(function (x) { return x.id === slot.subject_id; });
+            if (!s) return;
+            html += cardHTML(s, cardIndex++, slotLabel(slot));
           });
           html += '</div>';
-        } else {
-          // Show subjects scheduled on activeDayTab
-          var daySlots = schedule.filter(function (c) { return c.day_of_week === activeDayTab; })
-            .sort(function (a, b) { return a.start_time.localeCompare(b.start_time); });
-
-          if (daySlots.length === 0) {
-            html = '<div class="empty">' +
-              '<div style="font-size:14.5px; font-weight:500; color:var(--text); margin-bottom:4px;">No classes on ' + DAY_FULL_NAMES[activeDayTab] + '</div>' +
-              '<div style="margin-bottom:14px;">Click below to add a class for this day.</div>' +
-              '<button class="addbtn primary-action" onclick="toggleAddForm(' + activeDayTab + ')">+ Add subject to ' + DAY_NAMES[activeDayTab] + '</button>' +
-              '</div>';
-          } else {
-            html = '<div class="grid">';
-            daySlots.forEach(function (slot) {
-              var s = subjects.find(function (x) { return x.id === slot.subject_id; });
-              if (!s) return;
-              html += cardHTML(s, cardIndex++, slotLabel(slot));
-            });
-            html += '</div>';
-          }
         }
 
         mount.innerHTML = html;
@@ -2195,23 +2159,19 @@
 
           var min = clamp(parseInt((minInput ? minInput.value : '75') || '0', 10), 0, 100);
 
-          var isDayPreset = addPresetDay !== null && addPresetDay !== undefined;
-          var setTimeCheckbox = document.getElementById('newSubjectSetTime');
-          var setTime = isDayPreset || (setTimeCheckbox && setTimeCheckbox.checked);
-
           var start24 = format24Time(startHour12, startMin, startAmpm);
           var end24 = format24Time(endHour12, endMin, endAmpm);
 
           var enableNotifCheckbox = document.getElementById('newSubjectEnableNotif');
           var enableNotif = enableNotifCheckbox ? enableNotifCheckbox.checked : true;
 
-          // Determine target days: if preset for specific day/all, use preset; otherwise collect from checklist
-          var checkedDays = [];
-          if (isDayPreset) {
-            checkedDays = (addPresetDay === 'all') ? DAY_ORDER : [parseInt(addPresetDay, 10)];
-          } else {
-            var checkedDayEls = document.querySelectorAll('.day-checkbox:checked');
-            checkedDays = Array.from(checkedDayEls).map(function (cb) { return parseInt(cb.value, 10); });
+          // Collect selected days from the Days Checklist
+          var checkedDayEls = document.querySelectorAll('.day-checkbox:checked');
+          var checkedDays = Array.from(checkedDayEls).map(function (cb) { return parseInt(cb.value, 10); });
+
+          if (checkedDays.length === 0) {
+            showStatus('Select at least one day for the subject.', true);
+            return;
           }
 
           try {
@@ -2232,22 +2192,20 @@
               }
             }
 
-            if (setTime && checkedDays.length > 0) {
-              var schedRows = checkedDays.map(function (d) {
-                return { subject_id: newSubject.id, day_of_week: d, start_time: start24, end_time: end24 };
-              });
-              var schedRes = await supabase.from('class_schedule').insert(schedRows);
-              if (schedRes.error) throw schedRes.error;
-            }
+            var schedRows = checkedDays.map(function (d) {
+              return { subject_id: newSubject.id, day_of_week: d, start_time: start24, end_time: end24 };
+            });
+            var schedRes = await supabase.from('class_schedule').insert(schedRows);
+            if (schedRes.error) throw schedRes.error;
+
             showStatus(null);
           } catch (e) {
             showStatus("Couldn't add subject: " + e.message, true);
           }
 
           addFormType = 'theory';
-          addFormSetTime = false;
+          addFormSetTime = true;
           showAdd = false;
-          addPresetDay = null;
           await loadSchedule();
         },
 
