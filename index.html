@@ -26,8 +26,12 @@
       --primary-hover: #2563eb;
       --primary-glass: rgba(59, 130, 246, 0.12);
       --mint: #10b981;
+      --orange: #f97316;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --pink: #ec4899;
       --safe: #10b981;
-      --warn: #f59e0b;
+      --warn: #eab308;
       --danger: #ef4444;
     }
 
@@ -142,7 +146,7 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .brand-mark-wrap {
@@ -151,11 +155,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #ffffff;
-      color: #000000;
-      font-weight: 600;
-      font-size: 14px;
-      font-family: 'JetBrains Mono', monospace;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
     }
 
     .brand-word.top {
@@ -188,7 +189,7 @@
     .topbar-btn:hover {
       background: var(--panel-hover);
       color: var(--text);
-      border-color: #3b82f6;
+      border-color: var(--pink);
     }
 
     .topbar-btn.primary {
@@ -256,7 +257,7 @@
     }
 
     .auth-input:focus {
-      border-color: var(--primary);
+      border-color: var(--pink);
     }
 
     .field-wrap .auth-input {
@@ -327,7 +328,7 @@
 
     .auth-google-btn:hover:not(:disabled) {
       background: var(--panel-hover);
-      border-color: var(--primary);
+      border-color: var(--pink);
     }
 
     .auth-divider {
@@ -423,7 +424,7 @@
     .avatar-dot {
       width: 6px;
       height: 6px;
-      background: var(--safe);
+      background: var(--pink);
     }
 
     .email {
@@ -456,29 +457,29 @@
     }
 
     .ghost-btn:hover {
-      border-color: var(--primary);
+      border-color: var(--orange);
       color: var(--text);
       background: var(--panel-hover);
     }
 
     .ghost-btn.danger:hover {
-      border-color: var(--danger);
-      color: var(--danger);
+      border-color: var(--red);
+      color: var(--red);
       background: rgba(239, 68, 68, 0.08);
     }
 
     .status-banner {
       font-size: 12px;
       font-weight: 400;
-      color: var(--warn);
-      background: rgba(245, 158, 11, 0.1);
-      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: var(--orange);
+      background: rgba(249, 115, 22, 0.1);
+      border: 1px solid rgba(249, 115, 22, 0.3);
       padding: 9px 12px;
       margin-bottom: 18px;
       animation: popIn .2s ease both;
     }
 
-    /* Motion.dev Minimal Rectangular Overall Card */
+    /* Minimal Rectangular Overall Card */
     .overall {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -504,8 +505,8 @@
       font-size: 11px;
       letter-spacing: .12em;
       text-transform: uppercase;
-      color: var(--text-faint);
-      font-weight: 400;
+      color: var(--pink);
+      font-weight: 500;
     }
 
     .overall-main {
@@ -557,13 +558,13 @@
     .day-tab:hover {
       background: var(--panel-hover);
       color: var(--text);
-      border-color: var(--primary);
+      border-color: var(--orange);
     }
 
     .day-tab.active {
-      background: var(--primary-glass);
-      border-color: var(--primary);
-      color: var(--primary);
+      background: rgba(249, 115, 22, 0.12);
+      border-color: var(--orange);
+      color: var(--orange);
       font-weight: 500;
     }
 
@@ -577,8 +578,8 @@
     }
 
     .day-tab.active .day-badge {
-      background: rgba(59, 130, 246, 0.2);
-      color: var(--primary);
+      background: rgba(249, 115, 22, 0.25);
+      color: var(--orange);
     }
 
     @media (max-width: 640px) {
@@ -623,7 +624,7 @@
     }
 
     .addbtn:hover {
-      border-color: var(--primary);
+      border-color: var(--pink);
       background: var(--panel-hover);
       color: var(--text);
     }
@@ -695,21 +696,21 @@
 
     .day-check-item:hover {
       background: var(--panel-hover);
-      border-color: var(--primary);
+      border-color: var(--pink);
       color: var(--text);
     }
 
     .day-check-item input[type="checkbox"] {
-      accent-color: var(--primary);
+      accent-color: var(--pink);
       width: 14px;
       height: 14px;
       cursor: pointer;
     }
 
     .day-check-item.checked {
-      background: var(--primary-glass);
-      border-color: var(--primary);
-      color: var(--primary);
+      background: rgba(236, 72, 153, 0.12);
+      border-color: var(--pink);
+      color: var(--pink);
     }
 
     /* Subject Cards Grid */
@@ -732,7 +733,7 @@
 
     @media (hover:hover) and (pointer:fine) {
       .card:hover {
-        border-color: var(--primary);
+        border-color: var(--pink);
       }
     }
 
@@ -754,7 +755,7 @@
     }
 
     .card .remove:hover {
-      color: var(--danger);
+      color: var(--red);
     }
 
     .card-head {
@@ -788,7 +789,7 @@
     }
 
     .notif-toggle-btn:hover {
-      border-color: var(--primary);
+      border-color: var(--pink);
       color: var(--text);
     }
 
@@ -798,6 +799,7 @@
       color: var(--safe);
     }
 
+    /* Classy Minimal Tags (Orange & Pink) */
     .tag {
       display: inline-block;
       margin-top: 4px;
@@ -809,15 +811,15 @@
     }
 
     .tag.theory {
-      color: var(--text-dim);
-      background: var(--panel-2);
-      border: 1px solid var(--line);
+      color: var(--orange);
+      background: rgba(249, 115, 22, 0.1);
+      border: 1px solid rgba(249, 115, 22, 0.25);
     }
 
     .tag.lab {
-      color: var(--primary);
-      background: rgba(59, 130, 246, 0.1);
-      border: 1px solid rgba(59, 130, 246, 0.25);
+      color: var(--pink);
+      background: rgba(236, 72, 153, 0.1);
+      border: 1px solid rgba(236, 72, 153, 0.25);
     }
 
     .steppers {
@@ -865,8 +867,8 @@
 
     @media (hover:hover) and (pointer:fine) {
       .stepbtn:hover {
-        border-color: var(--primary);
-        background: var(--primary);
+        border-color: var(--pink);
+        background: var(--pink);
         color: #ffffff;
       }
     }
@@ -922,7 +924,7 @@
     }
 
     .mininput:focus {
-      border-color: var(--primary);
+      border-color: var(--pink);
     }
 
     .pct-sign {
@@ -1021,7 +1023,7 @@
     }
 
     .panel-form input[type=text]:focus {
-      border-color: var(--primary);
+      border-color: var(--pink);
     }
 
     /* Custom 12-Hour Time Picker & AM/PM Scroller */
@@ -1049,8 +1051,8 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       font-weight: 400;
-      color: var(--primary);
-      background: rgba(59, 130, 246, 0.12);
+      color: var(--orange);
+      background: rgba(249, 115, 22, 0.12);
       padding: 2px 6px;
     }
 
@@ -1100,7 +1102,7 @@
     }
 
     .ampm-btn.active {
-      background: var(--primary);
+      background: var(--pink);
       color: #ffffff;
       font-weight: 500;
     }
@@ -1140,7 +1142,7 @@
     }
 
     .upload-zone:hover {
-      border-color: var(--primary);
+      border-color: var(--pink);
       background: var(--panel-hover);
     }
 
@@ -1163,9 +1165,9 @@
     }
 
     .type-btn.active {
-      border-color: var(--primary);
-      background: var(--primary-glass);
-      color: var(--primary);
+      border-color: var(--pink);
+      background: rgba(236, 72, 153, 0.12);
+      color: var(--pink);
       font-weight: 500;
     }
 
@@ -1259,7 +1261,13 @@
   <div class="wrap hidden" id="appShell">
     <div class="topbar" id="topbar">
       <div class="brand">
-        <div class="brand-mark-wrap">M</div>
+        <div class="brand-mark-wrap">
+          <svg width="18" height="18" viewBox="0 0 30 30">
+            <circle cx="15" cy="15" r="12" fill="none" stroke="var(--line)" stroke-width="3" />
+            <circle cx="15" cy="15" r="12" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round"
+              stroke-dasharray="56 75.4" transform="rotate(-90 15 15)" />
+          </svg>
+        </div>
         <div class="brand-word top">Attendily</div>
       </div>
       <div class="topbar-actions">
@@ -1351,8 +1359,13 @@
         var mount = document.getElementById('authCardMount');
         var brandBlock =
           '<div class="brand">' +
-          '<div class="brand-mark-wrap">M</div>' +
-          '<div><div class="brand-word" style="font-size:18px; font-weight:500;">Attendily</div><div class="brand-tagline">Attendance, without guesswork.</div></div>' +
+          '<div class="brand-mark-wrap">' +
+          '<svg width="18" height="18" viewBox="0 0 30 30">' +
+          '<circle cx="15" cy="15" r="12" fill="none" stroke="var(--line)" stroke-width="3"/>' +
+          '<circle cx="15" cy="15" r="12" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" stroke-dasharray="56 75.4" transform="rotate(-90 15 15)"/>' +
+          '</svg>' +
+          '</div>' +
+          '<div><div class="brand-word" style="font-size:18px; font-weight:500;">Attendily</div></div>' +
           '</div>';
 
         if (authMode === 'forgot') {
@@ -1910,21 +1923,36 @@
           : 'New Subject';
 
         var presetNotice = isDayPreset
-          ? '<div style="font-size:11.5px; font-weight:400; color:var(--primary); background:var(--primary-glass); padding:7px 10px; border:1px solid rgba(59,130,246,0.3);">' +
-          'Adding to ' + (addPresetDay === 'all' ? 'All Days (Mon–Sat)' : DAY_FULL_NAMES[addPresetDay]) +
+          ? '<div style="font-size:11.5px; font-weight:400; color:var(--orange); background:rgba(249,115,22,0.1); padding:7px 10px; border:1px solid rgba(249,115,22,0.3);">' +
+          'Automatically adding to ' + (addPresetDay === 'all' ? 'All Days (Mon–Sat)' : DAY_FULL_NAMES[addPresetDay]) +
           '</div>'
           : '';
 
-        // Days Checklist Items (Mon to Sat)
-        var dayChecklistHTML = DAY_ORDER.map(function (d) {
-          var isChecked = isDayPreset ? (addPresetDay === 'all' || addPresetDay === d) : true;
-          return (
-            '<label class="day-check-item ' + (isChecked ? 'checked' : '') + '">' +
-            '<input type="checkbox" class="day-checkbox" value="' + d + '" ' + (isChecked ? 'checked' : '') + ' onchange="updateDayCheckStyle(this)"/>' +
-            '<span>' + DAY_NAMES[d] + '</span>' +
-            '</label>'
-          );
-        }).join('');
+        // Day Checklist HTML only displayed when adding from "ALL Days" tab (not when preset for a specific day)
+        var dayChecklistSection = '';
+        if (!isDayPreset) {
+          var dayChecklistHTML = DAY_ORDER.map(function (d) {
+            return (
+              '<label class="day-check-item checked">' +
+              '<input type="checkbox" class="day-checkbox" value="' + d + '" checked onchange="updateDayCheckStyle(this)"/>' +
+              '<span>' + DAY_NAMES[d] + '</span>' +
+              '</label>'
+            );
+          }).join('');
+
+          dayChecklistSection =
+            '<div class="days-checklist-box">' +
+            '<div class="days-checklist-header">' +
+            '<span>Select Days</span>' +
+            '<div style="display:flex; gap:6px;">' +
+            '<button type="button" class="link-btn" onclick="toggleCheckAllDays(true)">Select All</button>' +
+            '<span style="color:var(--line);">|</span>' +
+            '<button type="button" class="link-btn muted" onclick="toggleCheckAllDays(false)">Clear</button>' +
+            '</div>' +
+            '</div>' +
+            '<div class="days-checklist-grid">' + dayChecklistHTML + '</div>' +
+            '</div>';
+        }
 
         // 12-Hour options (1 to 12)
         var hourOptions = '';
@@ -1957,17 +1985,7 @@
             '</label>'
           ) : '<input type="checkbox" id="newSubjectSetTime" checked style="display:none;"/>') +
           '<div id="newSubjectTimeFields" class="' + (addFormSetTime || isDayPreset ? '' : 'hidden') + '" style="display:flex; flex-direction:column; gap:10px;">' +
-          '<div class="days-checklist-box">' +
-          '<div class="days-checklist-header">' +
-          '<span>Select Days</span>' +
-          '<div style="display:flex; gap:6px;">' +
-          '<button type="button" class="link-btn" onclick="toggleCheckAllDays(true)">Select All</button>' +
-          '<span style="color:var(--line);">|</span>' +
-          '<button type="button" class="link-btn muted" onclick="toggleCheckAllDays(false)">Clear</button>' +
-          '</div>' +
-          '</div>' +
-          '<div class="days-checklist-grid">' + dayChecklistHTML + '</div>' +
-          '</div>' +
+          dayChecklistSection +
           '<div class="time-picker-box">' +
           '<div class="time-picker-title"><span>Interactive Class Timing</span><span class="time-duration-badge" id="timeDurationBadge">1h 0m</span></div>' +
           '<div class="time-block">' +
@@ -2187,9 +2205,14 @@
           var enableNotifCheckbox = document.getElementById('newSubjectEnableNotif');
           var enableNotif = enableNotifCheckbox ? enableNotifCheckbox.checked : true;
 
-          // Collect checked days from checklist
-          var checkedDayEls = document.querySelectorAll('.day-checkbox:checked');
-          var checkedDays = Array.from(checkedDayEls).map(function (cb) { return parseInt(cb.value, 10); });
+          // Determine target days: if preset for specific day/all, use preset; otherwise collect from checklist
+          var checkedDays = [];
+          if (isDayPreset) {
+            checkedDays = (addPresetDay === 'all') ? DAY_ORDER : [parseInt(addPresetDay, 10)];
+          } else {
+            var checkedDayEls = document.querySelectorAll('.day-checkbox:checked');
+            checkedDays = Array.from(checkedDayEls).map(function (cb) { return parseInt(cb.value, 10); });
+          }
 
           try {
             var res = await supabase.from('subjects')
