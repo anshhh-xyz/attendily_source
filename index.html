@@ -746,92 +746,41 @@
       color: var(--pink);
     }
 
-    /* Magic Bento Grid (PC View >= 640px) */
-    @media (min-width: 640px) {
-      .magic-bento-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 16px;
-        padding: 20px;
-        background: rgba(12, 12, 16, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        position: relative;
-      }
+    /* Apple Style Dock for Subject Cards Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      padding: 16px;
+      background: rgba(18, 18, 22, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
 
-      .bento-card {
-        position: relative;
-        background: #0f0f13;
-        border: 1px solid var(--line);
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        overflow: hidden;
-        transition: border-color .25s ease, transform .25s ease, box-shadow .25s ease;
-      }
+    .card {
+      background: #111114;
+      border: 1px solid var(--line);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      transition: transform .25s cubic-bezier(0.16, 1, 0.3, 1), border-color .2s ease, box-shadow .25s ease;
+    }
 
-      /* Mouse Spotlight Glow (enableSpotlight: true, spotlightRadius: 400, glowColor: "132, 0, 255") */
-      .bento-card::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(132, 0, 255, 0.22), transparent 75%);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        pointer-events: none;
-        z-index: 1;
+    @media (hover:hover) and (pointer:fine) {
+      .card:hover {
+        border-color: var(--pink);
+        transform: translateY(-6px) scale(1.02);
+        box-shadow: 0 12px 28px rgba(236, 72, 153, 0.15), 0 4px 12px rgba(0, 0, 0, 0.4);
+        z-index: 5;
       }
+    }
 
-      /* Border Glow (enableBorderGlow: true) */
-      .bento-card::after {
-        content: '';
-        position: absolute;
-        inset: -1px;
-        background: radial-gradient(300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(236, 72, 153, 0.4), transparent 70%);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        pointer-events: none;
-        z-index: 0;
-      }
-
-      .bento-card:hover::before,
-      .bento-card:hover::after {
-        opacity: 1;
-      }
-
-      .bento-card:hover {
-        border-color: rgba(236, 72, 153, 0.5);
-        transform: translateY(-4px);
-        box-shadow: 0 12px 30px rgba(132, 0, 255, 0.18), 0 4px 12px rgba(0, 0, 0, 0.5);
-      }
-
-      /* Stars / Particle Floating Layer (enableStars: true, particleCount: 12) */
-      .bento-stars-layer {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        z-index: 1;
-        overflow: hidden;
-      }
-
-      .bento-star {
-        position: absolute;
-        width: 2px;
-        height: 2px;
-        background: #ffffff;
-        box-shadow: 0 0 6px rgba(132, 0, 255, 0.8);
-        opacity: 0.4;
-      }
-
-      .bento-card-content {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
+    .card.reveal {
+      animation: fadeSlideUp .3s ease both;
     }
 
     /* Animated List (Mobile View < 640px) */
@@ -2361,7 +2310,6 @@
 
         var cardIndex = 0;
         var html = '';
-        var isMobile = window.innerWidth < 640;
 
         // Show subjects scheduled on activeDayTab
         var daySlots = validScheduleForDay(activeDayTab).sort(function (a, b) { return a.start_time.localeCompare(b.start_time); });
@@ -2373,26 +2321,19 @@
             '<button class="addbtn primary-action" onclick="toggleAddForm(\'day\', ' + activeDayTab + ')">+ Add subject to ' + DAY_NAMES[activeDayTab] + '</button>' +
             '</div>';
         } else {
-          html = '<div class="' + (isMobile ? 'grid' : 'magic-bento-grid') + '">';
+          html = '<div class="grid">';
           daySlots.forEach(function (slot) {
             var s = subjects.find(function (x) { return x.id === slot.subject_id; });
             if (!s) return;
-            html += cardHTML(s, cardIndex++, slotLabel(slot), slot, isMobile);
+            html += cardHTML(s, cardIndex++, slotLabel(slot), slot);
           });
           html += '</div>';
         }
 
         mount.innerHTML = html;
-
-        if (!isMobile) {
-          setTimeout(function () {
-            initMagicBentoSpotlight();
-            animateBentoStars();
-          }, 30);
-        }
       }
 
-      function cardHTML(s, i, slotText, slot, isMobile) {
+      function cardHTML(s, i, slotText, slot) {
         var r = calc(s.attended, s.missed, s.min);
         var color = statusColor(r.status);
         var message;
@@ -2420,30 +2361,9 @@
         }
 
         var editSlotParam = slot ? slot.id : '';
-        var cardClass = isMobile ? 'card' : 'bento-card';
-
-        // 12 particle stars for Magic Bento on PC
-        var starsHTML = !isMobile ? (
-          '<div class="bento-stars-layer">' +
-          '<div class="bento-star" style="top:15%; left:20%;"></div>' +
-          '<div class="bento-star" style="top:70%; left:85%;"></div>' +
-          '<div class="bento-star" style="top:40%; left:60%;"></div>' +
-          '<div class="bento-star" style="top:80%; left:15%;"></div>' +
-          '<div class="bento-star" style="top:25%; left:75%;"></div>' +
-          '<div class="bento-star" style="top:55%; left:30%;"></div>' +
-          '<div class="bento-star" style="top:10%; left:90%;"></div>' +
-          '<div class="bento-star" style="top:85%; left:50%;"></div>' +
-          '<div class="bento-star" style="top:35%; left:10%;"></div>' +
-          '<div class="bento-star" style="top:65%; left:70%;"></div>' +
-          '<div class="bento-star" style="top:90%; left:25%;"></div>' +
-          '<div class="bento-star" style="top:20%; left:45%;"></div>' +
-          '</div>'
-        ) : '';
 
         return (
-          '<div class="' + cardClass + revealClass + '"' + revealStyle + '>' +
-          starsHTML +
-          '<div class="bento-card-content">' +
+          '<div class="card' + revealClass + '"' + revealStyle + '>' +
           '<div class="card-top-actions">' +
           '<button class="card-action-btn edit-btn" onclick="AT.openEditModal(\'' + editSlotParam + '\', \'' + s.id + '\')" title="Edit Class Details">' +
           '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
@@ -2473,7 +2393,6 @@
           '</div>' +
           '</div>' +
           '<div class="message" style="color:' + color + ';">' + message + '</div>' +
-          '</div>' +
           '</div>'
         );
       }
