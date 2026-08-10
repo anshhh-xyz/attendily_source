@@ -470,14 +470,15 @@
     }
 
     .status-banner {
-      font-size: 12px;
-      font-weight: 400;
-      color: var(--orange);
-      background: rgba(249, 115, 22, 0.1);
-      border: 1px solid rgba(249, 115, 22, 0.3);
-      padding: 9px 12px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #ffffff;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      padding: 10px 14px;
       margin-bottom: 18px;
       animation: popIn .2s ease both;
+      line-height: 1.45;
     }
 
     /* Minimal Rectangular Overall Card */
@@ -714,27 +715,36 @@
       color: var(--pink);
     }
 
-    /* Subject Cards Grid */
+    /* Apple Style Dock for Subject Cards Grid */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      padding: 16px;
+      background: rgba(18, 18, 22, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
     }
 
     .card {
-      background: var(--panel);
+      background: #111114;
       border: 1px solid var(--line);
-      padding: 16px;
+      padding: 18px;
       display: flex;
       flex-direction: column;
       gap: 12px;
       position: relative;
-      transition: border-color .15s ease;
+      transition: transform .25s cubic-bezier(0.16, 1, 0.3, 1), border-color .2s ease, box-shadow .25s ease;
     }
 
     @media (hover:hover) and (pointer:fine) {
       .card:hover {
         border-color: var(--pink);
+        transform: translateY(-6px) scale(1.02);
+        box-shadow: 0 12px 28px rgba(236, 72, 153, 0.15), 0 4px 12px rgba(0, 0, 0, 0.4);
+        z-index: 5;
       }
     }
 
@@ -1273,7 +1283,7 @@
       </div>
       <div class="topbar-actions">
         <button class="topbar-btn" id="scheduleToggleBtn" onclick="toggleSchedule()">Upload Schedule</button>
-        <button class="topbar-btn primary" id="addToggleBtn" onclick="toggleAddForm(null)">+ Add subject</button>
+        <button class="topbar-btn primary" id="addToggleBtn" onclick="toggleAddForm('global')">+ Add subject</button>
       </div>
     </div>
 
@@ -1324,6 +1334,7 @@
       var schedule = [];
       var loaded = false;
       var showAdd = false;
+      var addFormMode = 'global'; // 'global' or 'day'
       var addPresetDay = 1; // 1-6
       var activeDayTab = 1; // 1-6 (Default Mon)
       var currentUser = null;
@@ -1346,6 +1357,13 @@
 
       var authMode = 'signin';
       var pwPanelOpen = false;
+
+      // Helper function: Return only valid schedule entries whose subject exists in subjects list
+      function validScheduleForDay(day) {
+        return schedule.filter(function (c) {
+          return c.day_of_week === day && subjects.some(function (s) { return s.id === c.subject_id; });
+        });
+      }
 
       function fieldWithEye(id, placeholder, autocomplete) {
         return (
@@ -1767,8 +1785,7 @@
 
       function selectDayTab(day) {
         activeDayTab = day;
-        // Fix: Sync addPresetDay to current day when switching tabs with Add Form open
-        if (showAdd) {
+        if (showAdd && addFormMode === 'day') {
           addPresetDay = day;
         }
         render();
@@ -1779,9 +1796,9 @@
         var mount = document.getElementById('daysNavMount');
         var html = '';
 
-        // Mon - Sat Tabs Only ("All Days" tab completely removed as requested)
+        // Mon - Sat Tabs Only
         DAY_ORDER.forEach(function (day) {
-          var count = schedule.filter(function (c) { return c.day_of_week === day; }).length;
+          var count = validScheduleForDay(day).length;
           var isActive = activeDayTab === day;
           html += '<button class="day-tab ' + (isActive ? 'active' : '') + '" onclick="selectDayTab(' + day + ')">' +
             '<span>' + DAY_NAMES[day] + '</span>' +
@@ -1795,7 +1812,7 @@
       function renderDayActionBar() {
         var mount = document.getElementById('dayActionBarMount');
         var dayName = DAY_FULL_NAMES[activeDayTab];
-        var daySlots = schedule.filter(function (c) { return c.day_of_week === activeDayTab; });
+        var daySlots = validScheduleForDay(activeDayTab);
         var daySubjectIds = daySlots.map(function (s) { return s.subject_id; });
 
         var allDayNotifsMuted = daySubjectIds.length > 0 && daySubjectIds.every(function (id) { return mutedSubjectIds.includes(id); });
@@ -1805,22 +1822,31 @@
           '<div class="day-action-title">' + dayName + '\'s Schedule (' + daySlots.length + ' class' + (daySlots.length !== 1 ? 'es' : '') + ')</div>' +
           '<div style="display:flex; gap:8px;">' +
           '<button class="ghost-btn" onclick="AT.toggleNotifForDay(' + activeDayTab + ')">' + (allDayNotifsMuted ? 'Enable Day Notifs' : 'Mute Day Notifs') + '</button>' +
-          '<button class="addbtn primary-action" onclick="toggleAddForm(' + activeDayTab + ')">+ Add subject to ' + DAY_NAMES[activeDayTab] + '</button>' +
+          '<button class="addbtn primary-action" onclick="toggleAddForm(\'day\', ' + activeDayTab + ')">+ Add subject to ' + DAY_NAMES[activeDayTab] + '</button>' +
           '</div>' +
           '</div>';
       }
 
       var addFormType = 'theory';
-      var addFormSetTime = true;
 
-      function toggleAddForm(presetDay) {
-        var targetDay = (presetDay !== null && presetDay !== undefined) ? presetDay : activeDayTab;
-        if (showAdd && addPresetDay === targetDay) {
+      function toggleAddForm(mode, targetDay) {
+        if (mode === null || mode === undefined || typeof mode === 'number') {
+          if (typeof mode === 'number') {
+            targetDay = mode;
+            mode = 'day';
+          } else {
+            mode = 'global';
+          }
+        }
+
+        var reqDay = (targetDay !== null && targetDay !== undefined) ? targetDay : activeDayTab;
+
+        if (showAdd && addFormMode === mode && (mode === 'global' || addPresetDay === reqDay)) {
           showAdd = false;
         } else {
           showAdd = true;
-          addPresetDay = targetDay;
-          addFormSetTime = true;
+          addFormMode = mode;
+          addPresetDay = reqDay;
         }
         render();
       }
@@ -1907,31 +1933,46 @@
         if (addBtn) addBtn.classList.add('active');
 
         var targetDay = addPresetDay || activeDayTab;
-        var headerTitle = 'Add Subject (' + DAY_FULL_NAMES[targetDay] + ')';
+        var isGlobalMode = addFormMode === 'global';
 
-        // Render Day Checklist Grid with current active day pre-selected
-        var dayChecklistHTML = DAY_ORDER.map(function (d) {
-          var isChecked = (d === targetDay);
-          return (
-            '<label class="day-check-item ' + (isChecked ? 'checked' : '') + '">' +
-            '<input type="checkbox" class="day-checkbox" value="' + d + '" ' + (isChecked ? 'checked' : '') + ' onchange="updateDayCheckStyle(this)"/>' +
-            '<span>' + DAY_NAMES[d] + '</span>' +
-            '</label>'
-          );
-        }).join('');
+        var headerTitle = isGlobalMode
+          ? 'Add Subject (Schedule Across Days)'
+          : 'Add Subject to ' + DAY_FULL_NAMES[targetDay];
 
-        var dayChecklistSection =
-          '<div class="days-checklist-box">' +
-          '<div class="days-checklist-header">' +
-          '<span>Schedule Days</span>' +
-          '<div style="display:flex; gap:6px;">' +
-          '<button type="button" class="link-btn" onclick="toggleCheckAllDays(true)">Select All</button>' +
-          '<span style="color:var(--line);">|</span>' +
-          '<button type="button" class="link-btn muted" onclick="toggleCheckAllDays(false)">Clear</button>' +
-          '</div>' +
-          '</div>' +
-          '<div class="days-checklist-grid">' + dayChecklistHTML + '</div>' +
+        var modeNotice = isGlobalMode
+          ? '<div style="font-size:11.5px; font-weight:400; color:var(--primary); background:rgba(59,130,246,0.1); padding:7px 10px; border:1px solid rgba(59,130,246,0.3);">' +
+          'Multi-Day Mode: Check the days to schedule this class across your week.' +
+          '</div>'
+          : '<div style="font-size:11.5px; font-weight:400; color:var(--orange); background:rgba(249,115,22,0.1); padding:7px 10px; border:1px solid rgba(249,115,22,0.3);">' +
+          'Day-Specific Mode: Adding class exclusively to ' + DAY_FULL_NAMES[targetDay] + '.' +
           '</div>';
+
+        // Render Day Checklist Grid ONLY for Global Add Subject Mode
+        var dayChecklistSection = '';
+        if (isGlobalMode) {
+          var dayChecklistHTML = DAY_ORDER.map(function (d) {
+            var isChecked = (d === targetDay);
+            return (
+              '<label class="day-check-item ' + (isChecked ? 'checked' : '') + '">' +
+              '<input type="checkbox" class="day-checkbox" value="' + d + '" ' + (isChecked ? 'checked' : '') + ' onchange="updateDayCheckStyle(this)"/>' +
+              '<span>' + DAY_NAMES[d] + '</span>' +
+              '</label>'
+            );
+          }).join('');
+
+          dayChecklistSection =
+            '<div class="days-checklist-box">' +
+            '<div class="days-checklist-header">' +
+            '<span>Schedule Days</span>' +
+            '<div style="display:flex; gap:6px;">' +
+            '<button type="button" class="link-btn" onclick="toggleCheckAllDays(true)">Select All</button>' +
+            '<span style="color:var(--line);">|</span>' +
+            '<button type="button" class="link-btn muted" onclick="toggleCheckAllDays(false)">Clear</button>' +
+            '</div>' +
+            '</div>' +
+            '<div class="days-checklist-grid">' + dayChecklistHTML + '</div>' +
+            '</div>';
+        }
 
         // 12-Hour options (1 to 12)
         var hourOptions = '';
@@ -1948,6 +1989,7 @@
         mount.innerHTML =
           '<div class="panel-form">' +
           '<div class="panel-form-head"><span>' + headerTitle + '</span><button onclick="AT.closeAdd()">&#10005;</button></div>' +
+          modeNotice +
           '<input type="text" id="newSubjectName" placeholder="Subject name (e.g. Mathematics)" maxlength="40"/>' +
           '<div class="type-row">' +
           '<button type="button" class="type-btn ' + (addFormType === 'theory' ? 'active' : '') + '" onclick="AT.setType(\'theory\')">Theory</button>' +
@@ -2017,14 +2059,13 @@
         var html = '';
 
         // Show subjects scheduled on activeDayTab
-        var daySlots = schedule.filter(function (c) { return c.day_of_week === activeDayTab; })
-          .sort(function (a, b) { return a.start_time.localeCompare(b.start_time); });
+        var daySlots = validScheduleForDay(activeDayTab).sort(function (a, b) { return a.start_time.localeCompare(b.start_time); });
 
         if (daySlots.length === 0) {
           html = '<div class="empty">' +
             '<div style="font-size:14.5px; font-weight:600; color:var(--text); margin-bottom:4px;">No classes scheduled for ' + DAY_FULL_NAMES[activeDayTab] + '</div>' +
             '<div style="margin-bottom:14px; font-size:12.5px;">Click below to add a class for this day.</div>' +
-            '<button class="addbtn primary-action" onclick="toggleAddForm(' + activeDayTab + ')">+ Add subject to ' + DAY_NAMES[activeDayTab] + '</button>' +
+            '<button class="addbtn primary-action" onclick="toggleAddForm(\'day\', ' + activeDayTab + ')">+ Add subject to ' + DAY_NAMES[activeDayTab] + '</button>' +
             '</div>';
         } else {
           html = '<div class="grid">';
@@ -2127,7 +2168,7 @@
         },
 
         toggleNotifForDay: function (dayIndex) {
-          var daySlots = schedule.filter(function (c) { return c.day_of_week === dayIndex; });
+          var daySlots = validScheduleForDay(dayIndex);
           var daySubjectIds = daySlots.map(function (s) { return s.subject_id; });
 
           var allMuted = daySubjectIds.length > 0 && daySubjectIds.every(function (id) { return mutedSubjectIds.includes(id); });
@@ -2145,12 +2186,6 @@
           render();
         },
 
-        toggleTimeFields: function (checked) {
-          addFormSetTime = checked;
-          var el = document.getElementById('newSubjectTimeFields');
-          if (el) el.classList.toggle('hidden', !checked);
-        },
-
         submitAdd: async function () {
           var nameInput = document.getElementById('newSubjectName');
           var minInput = document.getElementById('newSubjectMin');
@@ -2162,16 +2197,57 @@
           var start24 = format24Time(startHour12, startMin, startAmpm);
           var end24 = format24Time(endHour12, endMin, endAmpm);
 
+          // Calculate time bounds in minutes from midnight for conflict check
+          var startHour24 = parseInt(start24.split(':')[0], 10);
+          var startMinuteVal = parseInt(start24.split(':')[1], 10);
+          var endHour24 = parseInt(end24.split(':')[0], 10);
+          var endMinuteVal = parseInt(end24.split(':')[1], 10);
+
+          var newStartMin = startHour24 * 60 + startMinuteVal;
+          var newEndMin = endHour24 * 60 + endMinuteVal;
+
+          if (newEndMin <= newStartMin) {
+            showStatus('Time Conflict Exception: Class end time must be later than start time.', true);
+            return;
+          }
+
           var enableNotifCheckbox = document.getElementById('newSubjectEnableNotif');
           var enableNotif = enableNotifCheckbox ? enableNotifCheckbox.checked : true;
 
-          // Collect selected days from the Days Checklist
-          var checkedDayEls = document.querySelectorAll('.day-checkbox:checked');
-          var checkedDays = Array.from(checkedDayEls).map(function (cb) { return parseInt(cb.value, 10); });
+          // Determine target days based on Add Form Mode (Global vs Day-Specific)
+          var targetDays = [];
+          if (addFormMode === 'global') {
+            var checkedDayEls = document.querySelectorAll('.day-checkbox:checked');
+            targetDays = Array.from(checkedDayEls).map(function (cb) { return parseInt(cb.value, 10); });
+            if (targetDays.length === 0) {
+              showStatus('Select at least one day to schedule this subject.', true);
+              return;
+            }
+          } else {
+            targetDays = [addPresetDay || activeDayTab];
+          }
 
-          if (checkedDays.length === 0) {
-            showStatus('Select at least one day for the subject.', true);
-            return;
+          // Raise Time Conflict Exception if two classes on the same day overlap in time
+          for (var i = 0; i < targetDays.length; i++) {
+            var d = targetDays[i];
+            var dayName = DAY_FULL_NAMES[d];
+            var existingSlots = validScheduleForDay(d);
+
+            for (var j = 0; j < existingSlots.length; j++) {
+              var slot = existingSlots[j];
+              var slotStartParts = slot.start_time.split(':');
+              var slotEndParts = slot.end_time.split(':');
+              var slotStartMin = parseInt(slotStartParts[0], 10) * 60 + parseInt(slotStartParts[1], 10);
+              var slotEndMin = parseInt(slotEndParts[0], 10) * 60 + parseInt(slotEndParts[1], 10);
+
+              // Overlap condition: (newStart < existingEnd) && (newEnd > existingStart)
+              if (newStartMin < slotEndMin && newEndMin > slotStartMin) {
+                var confSub = subjects.find(function (x) { return x.id === slot.subject_id; });
+                var confName = confSub ? confSub.name : 'A class';
+                showStatus('Time Conflict Exception: "' + confName + '" is already scheduled on ' + dayName + ' (' + slot.start_time.slice(0, 5) + '–' + slot.end_time.slice(0, 5) + '). Two different classes cannot occur at the same time on the same day.', true);
+                return;
+              }
+            }
           }
 
           try {
@@ -2192,7 +2268,7 @@
               }
             }
 
-            var schedRows = checkedDays.map(function (d) {
+            var schedRows = targetDays.map(function (d) {
               return { subject_id: newSubject.id, day_of_week: d, start_time: start24, end_time: end24 };
             });
             var schedRes = await supabase.from('class_schedule').insert(schedRows);
@@ -2204,7 +2280,6 @@
           }
 
           addFormType = 'theory';
-          addFormSetTime = true;
           showAdd = false;
           await loadSchedule();
         },
