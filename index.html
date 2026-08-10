@@ -2486,17 +2486,35 @@
               // Fallback to direct Gemini API call if stored key exists
               if (!data && geminiKey) {
                 var PROMPT = 'You are reading a college timetable image. Extract every class slot you can see. Return ONLY a JSON array, no prose, no markdown fences. Each item must look like: {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 0-6 (0=Sunday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}';
-                var gRes = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + geminiKey, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    contents: [{ parts: [{ text: PROMPT }, { inline_data: { mime_type: file.type, data: base64 } }] }]
-                  })
-                });
+                var models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+                var gRes = null;
 
-                if (!gRes.ok) {
-                  var errText = await gRes.text();
-                  throw new Error('Gemini API error: ' + errText);
+                for (var m = 0; m < models.length; m++) {
+                  gRes = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + models[m] + ':generateContent?key=' + geminiKey, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      contents: [{ parts: [{ text: PROMPT }, { inline_data: { mime_type: file.type, data: base64 } }] }]
+                    })
+                  });
+
+                  if (gRes.status !== 429) break;
+                }
+
+                if (!gRes || !gRes.ok) {
+                  var errText = gRes ? await gRes.text() : 'No response';
+                  var cleanMsg = 'Gemini API Error';
+                  try {
+                    var parsedErr = JSON.parse(errText);
+                    if (parsedErr.error && parsedErr.error.message) {
+                      cleanMsg = parsedErr.error.message;
+                    }
+                  } catch (_) { cleanMsg = errText; }
+
+                  if (gRes && gRes.status === 429) {
+                    throw new Error('Gemini API Quota Exceeded (HTTP 429): Google free-tier rate limit reached. Please wait ~40 seconds before retrying, or update your API key below.');
+                  }
+                  throw new Error(cleanMsg);
                 }
 
                 var gData = await gRes.json();
@@ -2526,10 +2544,30 @@
               importDraft = data.classes;
               renderImportDraft();
             } catch (e) {
-              mount.innerHTML = '<div class="auth-msg error" style="margin-top:12px;">' + (e.message || 'Failed to fetch timetable.') + '</div>';
+              window._pendingTimetableFile = file;
+              var isQuotaErr = e.message && e.message.indexOf('429') !== -1;
+              mount.innerHTML =
+                '<div class="auth-msg error" style="margin-top:12px; font-size:12px; line-height:1.45;">' +
+                '<strong>' + (isQuotaErr ? '⚠️ Rate Limit Exceeded (HTTP 429)' : 'Error Parsing Timetable') + '</strong><br/>' +
+                (e.message || 'Failed to fetch timetable.') +
+                '<div style="margin-top:10px; display:flex; gap:8px;">' +
+                '<button type="button" class="ghost-btn" onclick="SCHEDULE.clearGeminiKey()">Change API Key</button>' +
+                '</div>' +
+                '</div>';
             }
           };
           reader.readAsDataURL(file);
+        },
+
+        clearGeminiKey: function () {
+          localStorage.removeItem('attendily_gemini_key');
+          var mount = document.getElementById('importDraftMount');
+          mount.innerHTML =
+            '<div style="margin-top:12px; background:var(--panel-2); border:1px solid var(--line); padding:14px; display:flex; flex-direction:column; gap:10px; text-align:left;">' +
+            '<div style="font-size:12.5px; font-weight:600; color:var(--pink);">Update Gemini API Key</div>' +
+            '<input type="password" id="geminiApiKeyInput" placeholder="Paste New Gemini API Key (AIzaSy...)" style="background:var(--panel); border:1px solid var(--line); color:var(--text); padding:8px 10px; font-size:12px; width:100%;"/>' +
+            '<button class="submit-btn" style="padding:8px 0;" onclick="SCHEDULE.saveGeminiKeyAndRetry()">Save New Key & Retry</button>' +
+            '</div>';
         },
 
         saveGeminiKeyAndRetry: function () {
