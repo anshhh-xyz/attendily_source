@@ -548,35 +548,27 @@
       color: var(--text-dim);
     }
 
-    /* Days Navigation Bar */
+    /* Days Navigation Bar - Wide Distribution */
     .days-nav-section {
       margin-bottom: 20px;
+      width: 100%;
     }
 
     .days-nav {
       display: flex;
       align-items: center;
-      gap: 6px;
-      overflow-x: auto;
-      padding-bottom: 6px;
-      scrollbar-width: thin;
-      scrollbar-color: var(--line) transparent;
-    }
-
-    .days-nav::-webkit-scrollbar {
-      height: 3px;
-    }
-
-    .days-nav::-webkit-scrollbar-thumb {
-      background: var(--line);
-      border-radius: 3px;
+      gap: 8px;
+      width: 100%;
     }
 
     .day-tab {
+      flex: 1 1 0px;
+      min-width: 0;
       display: flex;
       align-items: center;
-      gap: 7px;
-      padding: 8px 14px;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 8px;
       border-radius: 10px;
       background: var(--panel);
       border: 1px solid var(--line);
@@ -586,7 +578,7 @@
       cursor: pointer;
       white-space: nowrap;
       transition: all .15s ease;
-      flex-shrink: 0;
+      text-align: center;
     }
 
     .day-tab:hover {
@@ -614,6 +606,14 @@
     .day-tab.active .day-badge {
       background: rgba(56, 189, 248, 0.15);
       color: var(--primary);
+    }
+
+    @media (max-width: 640px) {
+      .days-nav {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+      }
     }
 
     .day-action-bar {
@@ -709,6 +709,32 @@
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 140px;
+    }
+
+    .notif-toggle-btn {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 6px;
+      padding: 3px 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all .15s ease;
+    }
+
+    .notif-toggle-btn:hover {
+      border-color: var(--primary);
+      color: var(--text);
+    }
+
+    .notif-toggle-btn.active {
+      background: rgba(52, 211, 153, 0.12);
+      border-color: rgba(52, 211, 153, 0.3);
+      color: var(--safe);
     }
 
     .tag {
@@ -894,7 +920,7 @@
       flex-direction: column;
       gap: 12px;
       margin-bottom: 20px;
-      max-width: 420px;
+      max-width: 440px;
       animation: fadeSlideUp .3s ease both;
       box-shadow: 0 16px 40px rgba(0, 0, 0, .35);
     }
@@ -937,6 +963,105 @@
 
     .panel-form input[type=text]:focus {
       border-color: var(--primary);
+    }
+
+    /* Modern Interactive Time Picker & Preset Pills */
+    .time-picker-box {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .time-picker-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .time-duration-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+      background: rgba(56, 189, 248, 0.12);
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+
+    .time-inputs-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .time-input-field {
+      flex: 1;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 10px;
+      transition: border-color .15s ease;
+    }
+
+    .time-input-field:focus {
+      border-color: var(--primary);
+    }
+
+    .time-preset-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .time-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text-dim);
+      border-radius: 6px;
+      padding: 4px 8px;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+
+    .time-pill:hover {
+      border-color: var(--primary);
+      color: var(--text);
+      background: var(--panel-hover);
+    }
+
+    /* Timetable Upload Zone */
+    .upload-zone {
+      border: 2px dashed var(--line);
+      border-radius: 12px;
+      padding: 24px 16px;
+      text-align: center;
+      background: var(--panel-2);
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--primary);
+      background: var(--panel-hover);
+    }
+
+    .upload-icon {
+      font-size: 28px;
+      margin-bottom: 6px;
     }
 
     .type-row {
@@ -1141,7 +1266,7 @@
         <div class="brand-word top">Attendily</div>
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-        <button class="addbtn" id="scheduleToggleBtn" onclick="toggleSchedule()">Schedule</button>
+        <button class="addbtn" id="scheduleToggleBtn" onclick="toggleSchedule()">📸 Upload Schedule</button>
         <button class="addbtn primary-action" id="addToggleBtn" onclick="toggleAddForm(null)">+ Add subject</button>
       </div>
     </div>
@@ -1197,6 +1322,9 @@
       var activeDayTab = 'all'; // 'all' or number 0-6
       var currentUser = null;
       var firstRender = true;
+
+      // Local storage for subject/class notification preferences
+      var mutedSubjectIds = JSON.parse(localStorage.getItem('attendily_muted_subjects') || '[]');
 
       var DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       var DAY_FULL_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -1670,10 +1798,18 @@
         } else {
           var dayName = DAY_FULL_NAMES[activeDayTab];
           var daySlots = schedule.filter(function (c) { return c.day_of_week === activeDayTab; });
+          var daySubjectIds = daySlots.map(function (s) { return s.subject_id; });
+
+          // Check if all classes on this day have notifications enabled
+          var allDayNotifsMuted = daySubjectIds.length > 0 && daySubjectIds.every(function (id) { return mutedSubjectIds.includes(id); });
+
           mount.innerHTML =
             '<div class="day-action-bar">' +
             '<div class="day-action-title">' + dayName + '\'s Schedule (' + daySlots.length + ' class' + (daySlots.length !== 1 ? 'es' : '') + ')</div>' +
+            '<div style="display:flex; gap:8px;">' +
+            '<button class="ghost-btn" onclick="AT.toggleNotifForDay(' + activeDayTab + ')">' + (allDayNotifsMuted ? '🔕 Enable Day Notifs' : '🔔 Mute Day Notifs') + '</button>' +
             '<button class="addbtn primary-action" onclick="toggleAddForm(' + activeDayTab + ')">+ Add subject to ' + DAY_NAMES[activeDayTab] + '</button>' +
+            '</div>' +
             '</div>';
         }
       }
@@ -1692,6 +1828,35 @@
         render();
       }
       window.toggleAddForm = toggleAddForm;
+
+      function calculateDuration() {
+        var startEl = document.getElementById('newSubjectStart');
+        var endEl = document.getElementById('newSubjectEnd');
+        var badgeEl = document.getElementById('timeDurationBadge');
+        if (!startEl || !endEl || !badgeEl) return;
+        var start = startEl.value;
+        var end = endEl.value;
+        if (!start || !end) { badgeEl.textContent = '⏱️ --'; return; }
+        var sMin = parseInt(start.split(':')[0], 10) * 60 + parseInt(start.split(':')[1], 10);
+        var eMin = parseInt(end.split(':')[0], 10) * 60 + parseInt(end.split(':')[1], 10);
+        var diff = eMin - sMin;
+        if (diff <= 0) { badgeEl.textContent = '⏱️ Invalid'; return; }
+        var hrs = Math.floor(diff / 60);
+        var mins = diff % 60;
+        badgeEl.textContent = '⏱️ ' + (hrs > 0 ? hrs + 'h ' : '') + (mins > 0 ? mins + 'm' : (hrs === 0 ? '0m' : ''));
+      }
+      window.calculateDuration = calculateDuration;
+
+      function setPresetTime(start, end) {
+        var startEl = document.getElementById('newSubjectStart');
+        var endEl = document.getElementById('newSubjectEnd');
+        if (startEl && endEl) {
+          startEl.value = start;
+          endEl.value = end;
+          calculateDuration();
+        }
+      }
+      window.setPresetTime = setPresetTime;
 
       function renderAddForm() {
         var mount = document.getElementById('addFormMount');
@@ -1739,11 +1904,27 @@
             '<input type="checkbox" id="newSubjectSetTime" ' + (addFormSetTime ? 'checked' : '') + ' onchange="AT.toggleTimeFields(this.checked)"/> Set class day & time' +
             '</label>'
           ) : '<input type="checkbox" id="newSubjectSetTime" checked style="display:none;"/>') +
-          '<div id="newSubjectTimeFields" class="' + (addFormSetTime || isDayPreset ? '' : 'hidden') + '" style="display:flex; gap:8px; flex-wrap:wrap;">' +
-          '<select class="auth-input" id="newSubjectDay" style="flex:1; min-width:110px;" ' + (isDayPreset ? 'disabled' : '') + '>' + dayOptions + '</select>' +
-          '<input class="auth-input" type="time" id="newSubjectStart" value="09:00" style="flex:1; min-width:110px;"/>' +
-          '<input class="auth-input" type="time" id="newSubjectEnd" value="10:00" style="flex:1; min-width:110px;"/>' +
+          '<div id="newSubjectTimeFields" class="' + (addFormSetTime || isDayPreset ? '' : 'hidden') + '" style="display:flex; flex-direction:column; gap:8px;">' +
+          (isDayPreset ? '' : '<select class="auth-input" id="newSubjectDay" style="width:100%;">' + dayOptions + '</select>') +
+          '<div class="time-picker-box">' +
+          '<div class="time-picker-title"><span>Interactive Class Timing</span><span class="time-duration-badge" id="timeDurationBadge">⏱️ 1h</span></div>' +
+          '<div class="time-inputs-row">' +
+          '<input class="time-input-field" type="time" id="newSubjectStart" value="09:00" onchange="calculateDuration()"/>' +
+          '<span style="color:var(--text-faint); font-size:12px;">to</span>' +
+          '<input class="time-input-field" type="time" id="newSubjectEnd" value="10:00" onchange="calculateDuration()"/>' +
           '</div>' +
+          '<div class="time-preset-pills">' +
+          '<button type="button" class="time-pill" onclick="setPresetTime(\'09:00\',\'10:00\')">09:00–10:00</button>' +
+          '<button type="button" class="time-pill" onclick="setPresetTime(\'10:00\',\'11:00\')">10:00–11:00</button>' +
+          '<button type="button" class="time-pill" onclick="setPresetTime(\'11:15\',\'12:15\')">11:15–12:15</button>' +
+          '<button type="button" class="time-pill" onclick="setPresetTime(\'13:30\',\'14:30\')">13:30–14:30</button>' +
+          '<button type="button" class="time-pill" onclick="setPresetTime(\'14:30\',\'15:30\')">14:30–15:30</button>' +
+          '</div>' +
+          '</div>' +
+          '</div>' +
+          '<label style="display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text); cursor:pointer; background:var(--panel-2); padding:10px; border-radius:8px; border:1px solid var(--line);">' +
+          '<input type="checkbox" id="newSubjectEnableNotif" checked/> 🔔 Enable Push Notifications for this class' +
+          '</label>' +
           '<button class="submit-btn" onclick="AT.submitAdd()">Save Subject</button>' +
           '</div>';
 
@@ -1752,6 +1933,7 @@
           nameInput.focus();
           nameInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') AT.submitAdd(); });
         }
+        calculateDuration();
       }
 
       function slotsForSubject(subjectId) {
@@ -1819,6 +2001,11 @@
         var revealClass = firstRender ? ' reveal' : '';
         var revealStyle = firstRender ? ' style="animation-delay:' + (i * 35) + 'ms;"' : '';
 
+        var isMuted = mutedSubjectIds.includes(s.id);
+        var notifBtnHTML = '<button class="notif-toggle-btn ' + (isMuted ? '' : 'active') + '" onclick="AT.toggleNotifForSubject(\'' + s.id + '\')">' +
+          (isMuted ? '🔕 Muted' : '🔔 Notify') +
+          '</button>';
+
         var slots = slotsForSubject(s.id);
         var whenHTML = '';
         if (slotText) {
@@ -1832,9 +2019,12 @@
           '<button class="remove" onclick="AT.removeSubject(\'' + s.id + '\')" aria-label="remove subject">&#10005;</button>' +
           '<div class="card-head">' +
           ringWithLabel(r.pct, s.min, 72, 6, false) +
-          '<div style="min-width:0;">' +
+          '<div style="min-width:0; flex:1;">' +
           '<div class="card-name">' + safeName + '</div>' +
+          '<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:3px;">' +
           '<span class="tag ' + s.type + '">' + s.type + '</span>' +
+          notifBtnHTML +
+          '</div>' +
           whenHTML +
           '</div>' +
           '</div>' +
@@ -1871,6 +2061,40 @@
         setType: function (t) { addFormType = t; renderAddForm(); },
         closeAdd: function () { showAdd = false; render(); },
 
+        toggleNotifForSubject: function (subjectId) {
+          var idx = mutedSubjectIds.indexOf(subjectId);
+          if (idx >= 0) {
+            mutedSubjectIds.splice(idx, 1);
+            showStatus('Notifications enabled for subject.', false);
+          } else {
+            mutedSubjectIds.push(subjectId);
+            showStatus('Notifications muted for subject.', false);
+          }
+          localStorage.setItem('attendily_muted_subjects', JSON.stringify(mutedSubjectIds));
+          render();
+        },
+
+        toggleNotifForDay: function (dayIndex) {
+          var daySlots = schedule.filter(function (c) { return c.day_of_week === dayIndex; });
+          var daySubjectIds = daySlots.map(function (s) { return s.subject_id; });
+
+          var allMuted = daySubjectIds.length > 0 && daySubjectIds.every(function (id) { return mutedSubjectIds.includes(id); });
+
+          if (allMuted) {
+            // Unmute all for this day
+            mutedSubjectIds = mutedSubjectIds.filter(function (id) { return !daySubjectIds.includes(id); });
+            showStatus('Notifications enabled for all ' + DAY_FULL_NAMES[dayIndex] + ' classes.', false);
+          } else {
+            // Mute all for this day
+            daySubjectIds.forEach(function (id) {
+              if (!mutedSubjectIds.includes(id)) mutedSubjectIds.push(id);
+            });
+            showStatus('Notifications muted for all ' + DAY_FULL_NAMES[dayIndex] + ' classes.', false);
+          }
+          localStorage.setItem('attendily_muted_subjects', JSON.stringify(mutedSubjectIds));
+          render();
+        },
+
         toggleTimeFields: function (checked) {
           addFormSetTime = checked;
           var el = document.getElementById('newSubjectTimeFields');
@@ -1897,6 +2121,9 @@
           var start = startInput ? startInput.value || '09:00' : '09:00';
           var end = endInput ? endInput.value || '10:00' : '10:00';
 
+          var enableNotifCheckbox = document.getElementById('newSubjectEnableNotif');
+          var enableNotif = enableNotifCheckbox ? enableNotifCheckbox.checked : true;
+
           try {
             var res = await supabase.from('subjects')
               .insert([{ name: name, type: addFormType, min_attendance: min, attended: 0, missed: 0 }])
@@ -1905,6 +2132,16 @@
 
             var newSubject = res.data[0];
             subjects.push(rowToLocal(newSubject));
+
+            if (!enableNotif) {
+              mutedSubjectIds.push(newSubject.id);
+              localStorage.setItem('attendily_muted_subjects', JSON.stringify(mutedSubjectIds));
+            } else {
+              // Ensure push is enabled if browser allows
+              if ('Notification' in window && Notification.permission !== 'granted') {
+                PUSH.enable();
+              }
+            }
 
             if (setTime && day !== null && start && end) {
               var schedRes = await supabase.from('class_schedule')
@@ -2014,61 +2251,34 @@
         var mount = document.getElementById('scheduleMount');
         if (!showSchedule) { mount.innerHTML = ''; return; }
 
-        var rows = schedule.map(function (c) {
-          return (
-            '<div class="stepper" style="border-top:1px solid var(--line-soft); padding-top:10px;">' +
-            '<span class="label" style="width:auto; flex:1; font-weight:500; color:var(--text);">' + DAY_NAMES[c.day_of_week] + ' ' + c.start_time.slice(0, 5) + '\u2013' + c.end_time.slice(0, 5) + ' \u00b7 ' + (c.subjects ? c.subjects.name : '') + '</span>' +
-            '<div class="controls">' +
-            '<button class="ghost-btn" onclick="SCHEDULE.cancelNext(\'' + c.id + '\')">Cancel next</button>' +
-            '<button class="remove" style="position:static;" onclick="SCHEDULE.removeClass(\'' + c.id + '\')">&#10005;</button>' +
-            '</div>' +
-            '</div>'
-          );
-        }).join('');
-
-        var subjectOptions = subjects.map(function (s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
-        var dayOptions = DAY_NAMES.map(function (d, i) { return '<option value="' + i + '">' + d + '</option>'; }).join('');
-
         mount.innerHTML =
           '<div class="panel-form" style="max-width:480px;">' +
-          '<div class="panel-form-head"><span>Weekly Schedule Manager</span><button onclick="toggleSchedule()">&#10005;</button></div>' +
-          (rows || '<div style="font-size:12.5px;color:var(--text-dim);">No classes added yet.</div>') +
-          '<div style="border-top:1px solid var(--line-soft); padding-top:12px; display:flex; flex-direction:column; gap:8px;">' +
-          '<select class="auth-input" id="newClassSubject">' + subjectOptions + '</select>' +
-          '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
-          '<select class="auth-input" id="newClassDay" style="flex:1; min-width:100px;">' + dayOptions + '</select>' +
-          '<input class="auth-input" type="time" id="newClassStart" style="flex:1; min-width:100px;"/>' +
-          '<input class="auth-input" type="time" id="newClassEnd" style="flex:1; min-width:100px;"/>' +
-          '</div>' +
-          '<button class="submit-btn" onclick="SCHEDULE.addClass()">Add to Schedule</button>' +
-          '</div>' +
-          '<div style="border-top:1px solid var(--line-soft); padding-top:12px; display:flex; flex-direction:column; gap:8px;">' +
-          '<span style="font-size:12px; color:var(--text-dim);">Import from timetable photo</span>' +
-          '<input type="file" id="timetableFile" accept="image/*" class="auth-input" onchange="SCHEDULE.uploadTimetable(this.files[0])"/>' +
-          '<div id="importDraftMount"></div>' +
-          '</div>' +
-          '<div style="border-top:1px solid var(--line-soft); padding-top:12px;">' +
-          '<div class="toggle-row">' +
-          '<div class="toggle-text">' +
-          '<span class="t">Push notifications</span>' +
-          '<span class="d">Pings you 5 mins before each class ends, and again 30 mins after to log attendance.</span>' +
-          '</div>' +
-          '<label class="switch">' +
-          '<input type="checkbox" id="pushToggle" ' + (pushEnabled ? 'checked' : '') + ' onchange="PUSH.toggle(this.checked)"/>' +
-          '<span class="switch-track"></span>' +
+          '<div class="panel-form-head"><span>📸 Upload Schedule (Gemini AI)</span><button onclick="toggleSchedule()">&#10005;</button></div>' +
+          '<div style="font-size:12.5px; color:var(--text-dim); line-height:1.4;">Upload a photo of your college timetable. Gemini AI will parse all subjects, days, and timings automatically into your schedule tabs.</div>' +
+          '<label class="upload-zone">' +
+          '<div class="upload-icon">📸</div>' +
+          '<div style="font-size:13.5px; font-weight:600; color:var(--text);">Drop timetable photo here or click to browse</div>' +
+          '<div style="font-size:11.5px; color:var(--text-faint); margin-top:4px;">Supports PNG, JPG, WEBP</div>' +
+          '<input type="file" id="timetableFile" accept="image/*" style="display:none;" onchange="SCHEDULE.uploadTimetable(this.files[0])"/>' +
           '</label>' +
-          '</div>' +
-          '</div>' +
+          '<div id="importDraftMount"></div>' +
           '</div>';
       }
 
       function renderImportDraft() {
         var mount = document.getElementById('importDraftMount');
-        if (!importDraft || !importDraft.length) { mount.innerHTML = '<div class="auth-msg error">No classes detected. Try a clearer photo.</div>'; return; }
+        if (!importDraft || !importDraft.length) { mount.innerHTML = '<div class="auth-msg error">No classes detected in photo. Try a clearer image.</div>'; return; }
         var rows = importDraft.map(function (r) {
-          return '<div style="font-size:12px; color:var(--text-dim); padding:3px 0;">' + DAY_NAMES[r.day_of_week] + ' ' + r.start_time + '\u2013' + r.end_time + ' \u00b7 ' + r.subject_name + ' (' + r.type + ')</div>';
+          return '<div style="font-size:12px; color:var(--text); padding:4px 8px; background:var(--panel-2); border-radius:6px; margin-bottom:4px; display:flex; justify-content:space-between;">' +
+            '<span>' + DAY_NAMES[r.day_of_week] + ' ' + r.start_time + '\u2013' + r.end_time + '</span>' +
+            '<span style="font-weight:600; color:var(--primary);">' + r.subject_name + ' (' + r.type + ')</span>' +
+            '</div>';
         }).join('');
-        mount.innerHTML = rows + '<button class="submit-btn" style="margin-top:6px;" onclick="SCHEDULE.confirmImport()">Confirm & Add Classes</button>';
+        mount.innerHTML = '<div style="margin-top:10px;">' +
+          '<div style="font-size:12px; font-weight:600; color:var(--text-dim); margin-bottom:6px;">Detected Classes (' + importDraft.length + '):</div>' +
+          rows +
+          '<button class="submit-btn" style="margin-top:8px; width:100%;" onclick="SCHEDULE.confirmImport()">Add All Classes To Correct Day Tabs</button>' +
+          '</div>';
       }
 
       window.SCHEDULE = {
@@ -2117,7 +2327,7 @@
         uploadTimetable: async function (file) {
           if (!file) return;
           var mount = document.getElementById('importDraftMount');
-          mount.innerHTML = '<span class="spinner"></span> Reading timetable photo...';
+          mount.innerHTML = '<div style="padding:12px; text-align:center;"><span class="spinner"></span> Parsing timetable photo with Gemini AI...</div>';
           var reader = new FileReader();
           reader.onload = async function () {
             var base64 = reader.result.split(',')[1];
@@ -2166,7 +2376,9 @@
             var res = await supabase.from('class_schedule').insert(toInsert);
             if (res.error) throw res.error;
             importDraft = null;
-            document.getElementById('importDraftMount').innerHTML = '';
+            showSchedule = false;
+            document.getElementById('scheduleMount').innerHTML = '';
+            showStatus('Timetable parsed & added into day tabs successfully!', false);
             render();
             await loadSchedule();
           } catch (e) {
