@@ -608,10 +608,18 @@
     }
 
     @media (max-width: 640px) {
-      .days-nav {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
+      .pill-nav-wrap {
+        padding: 3px;
+        gap: 2px;
+      }
+      .day-tab {
+        padding: 8px 3px;
+        font-size: 11px;
+        gap: 3px;
+      }
+      .day-badge {
+        font-size: 9.5px;
+        padding: 0 4px;
       }
     }
 
@@ -1098,16 +1106,11 @@
     }
 
     .message {
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 400;
-      background: var(--panel-2);
-      border: 1px solid var(--line);
-      padding: 8px 10px;
-      margin-top: 8px;
+      margin-top: 6px;
       line-height: 1.35;
-    }
-      line-height: 1.35;
-      transition: all .2s ease;
+      transition: color .2s ease;
     }
 
     .ring-wrap {
@@ -2370,37 +2373,23 @@
             '<button class="addbtn primary-action" onclick="toggleAddForm(\'day\', ' + activeDayTab + ')">+ Add subject to ' + DAY_NAMES[activeDayTab] + '</button>' +
             '</div>';
         } else {
-          if (isMobile) {
-            // AnimatedList for Mobile View (< 640px)
-            html = '<div class="animated-list-wrap"><div class="animated-list-grid">';
-            daySlots.forEach(function (slot) {
-              var s = subjects.find(function (x) { return x.id === slot.subject_id; });
-              if (!s) return;
-              html += cardHTML(s, cardIndex++, slotLabel(slot), slot, true);
-            });
-            html += '</div></div>';
-          } else {
-            // MagicBento Grid for PC View (>= 640px)
-            html = '<div class="magic-bento-grid">';
-            daySlots.forEach(function (slot) {
-              var s = subjects.find(function (x) { return x.id === slot.subject_id; });
-              if (!s) return;
-              html += cardHTML(s, cardIndex++, slotLabel(slot), slot, false);
-            });
-            html += '</div>';
-          }
+          html = '<div class="' + (isMobile ? 'grid' : 'magic-bento-grid') + '">';
+          daySlots.forEach(function (slot) {
+            var s = subjects.find(function (x) { return x.id === slot.subject_id; });
+            if (!s) return;
+            html += cardHTML(s, cardIndex++, slotLabel(slot), slot, isMobile);
+          });
+          html += '</div>';
         }
 
         mount.innerHTML = html;
 
-        setTimeout(function () {
-          if (!isMobile) {
+        if (!isMobile) {
+          setTimeout(function () {
             initMagicBentoSpotlight();
             animateBentoStars();
-          } else {
-            animateMobileList();
-          }
-        }, 30);
+          }, 30);
+        }
       }
 
       function cardHTML(s, i, slotText, slot, isMobile) {
@@ -2431,7 +2420,7 @@
         }
 
         var editSlotParam = slot ? slot.id : '';
-        var cardClass = isMobile ? 'animated-list-item' : 'bento-card';
+        var cardClass = isMobile ? 'card' : 'bento-card';
 
         // 12 particle stars for Magic Bento on PC
         var starsHTML = !isMobile ? (
@@ -2919,7 +2908,8 @@
 
           addFormType = 'theory';
           showAdd = false;
-          await loadSchedule();
+          render();
+          loadSchedule();
         },
 
         removeSubject: async function (id) {
