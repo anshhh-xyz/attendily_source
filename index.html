@@ -1092,6 +1092,34 @@
       cursor: pointer;
     }
 
+    .time-input-num {
+      background: #111114 !important;
+      color: #f3f4f6 !important;
+      border: 1px solid var(--line);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      font-weight: 500;
+      padding: 5px 6px;
+      width: 48px;
+      text-align: center;
+      outline: none;
+      transition: border-color .15s ease;
+    }
+
+    .time-input-num:focus {
+      border-color: var(--pink);
+    }
+
+    .time-input-num::-webkit-inner-spin-button,
+    .time-input-num::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .time-input-num[type=number] {
+      -moz-appearance: textfield;
+    }
+
     .ampm-toggle {
       display: flex;
       background: var(--panel);
@@ -1877,18 +1905,42 @@
       }
       window.updateEndAmpm = updateEndAmpm;
 
+      function validateMinuteInput(el) {
+        var val = parseInt(el.value, 10);
+        if (isNaN(val)) { calculateDuration(); return; }
+        if (val >= 60) {
+          el.value = 59;
+        } else if (val < 0) {
+          el.value = 0;
+        }
+        calculateDuration();
+      }
+      window.validateMinuteInput = validateMinuteInput;
+
+      function formatMinutePadding(el) {
+        var val = parseInt(el.value, 10);
+        if (isNaN(val) || val < 0) val = 0;
+        if (val >= 60) val = 59;
+        el.value = (val < 10 ? '0' : '') + val;
+        calculateDuration();
+      }
+      window.formatMinutePadding = formatMinutePadding;
+
       function calculateDuration() {
         var shEl = document.getElementById('startHourSelect');
-        var smEl = document.getElementById('startMinSelect');
+        var smEl = document.getElementById('startMinInput');
         var ehEl = document.getElementById('endHourSelect');
-        var emEl = document.getElementById('endMinSelect');
+        var emEl = document.getElementById('endMinInput');
         var badgeEl = document.getElementById('timeDurationBadge');
         if (!shEl || !smEl || !ehEl || !emEl || !badgeEl) return;
 
         startHour12 = parseInt(shEl.value, 10);
-        startMin = parseInt(smEl.value, 10);
+        startMin = parseInt(smEl.value, 10) || 0;
         endHour12 = parseInt(ehEl.value, 10);
-        endMin = parseInt(emEl.value, 10);
+        endMin = parseInt(emEl.value, 10) || 0;
+
+        if (startMin >= 60) { startMin = 59; smEl.value = '59'; }
+        if (endMin >= 60) { endMin = 59; emEl.value = '59'; }
 
         var startTime24 = format24Time(startHour12, startMin, startAmpm);
         var endTime24 = format24Time(endHour12, endMin, endAmpm);
@@ -2007,7 +2059,7 @@
           '<span class="time-block-label">Start</span>' +
           '<select class="time-select" id="startHourSelect" onchange="calculateDuration()">' + hourOptions + '</select>' +
           '<span style="color:var(--text-dim); font-weight:500;">:</span>' +
-          '<select class="time-select" id="startMinSelect" onchange="calculateDuration()">' + minOptions + '</select>' +
+          '<input type="number" class="time-input-num" id="startMinInput" min="0" max="59" value="00" placeholder="00" oninput="validateMinuteInput(this)" onblur="formatMinutePadding(this)"/>' +
           '<div class="ampm-toggle">' +
           '<button type="button" class="ampm-btn active" id="startAmBtn" onclick="updateStartAmpm(\'AM\')">AM</button>' +
           '<button type="button" class="ampm-btn" id="startPmBtn" onclick="updateStartAmpm(\'PM\')">PM</button>' +
@@ -2017,7 +2069,7 @@
           '<span class="time-block-label">End</span>' +
           '<select class="time-select" id="endHourSelect" onchange="calculateDuration()">' + hourOptions.replace('value="9" selected', 'value="9"').replace('value="10"', 'value="10" selected') + '</select>' +
           '<span style="color:var(--text-dim); font-weight:500;">:</span>' +
-          '<select class="time-select" id="endMinSelect" onchange="calculateDuration()">' + minOptions + '</select>' +
+          '<input type="number" class="time-input-num" id="endMinInput" min="0" max="59" value="00" placeholder="00" oninput="validateMinuteInput(this)" onblur="formatMinutePadding(this)"/>' +
           '<div class="ampm-toggle">' +
           '<button type="button" class="ampm-btn active" id="endAmBtn" onclick="updateEndAmpm(\'AM\')">AM</button>' +
           '<button type="button" class="ampm-btn" id="endPmBtn" onclick="updateEndAmpm(\'PM\')">PM</button>' +
@@ -2193,6 +2245,16 @@
           if (!name) { if (nameInput) nameInput.focus(); return; }
 
           var min = clamp(parseInt((minInput ? minInput.value : '75') || '0', 10), 0, 100);
+
+          var smEl = document.getElementById('startMinInput');
+          var emEl = document.getElementById('endMinInput');
+          if (smEl) startMin = parseInt(smEl.value, 10) || 0;
+          if (emEl) endMin = parseInt(emEl.value, 10) || 0;
+
+          if (startMin >= 60 || endMin >= 60 || startMin < 0 || endMin < 0) {
+            showStatus('Invalid Minute: Minute values must be between 0 and 59.', true);
+            return;
+          }
 
           var start24 = format24Time(startHour12, startMin, startAmpm);
           var end24 = format24Time(endHour12, endMin, endAmpm);
