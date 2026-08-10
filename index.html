@@ -2473,11 +2473,12 @@
                   var errDetail = invokeRes.error.message || 'Edge function error';
                   if (invokeRes.data && invokeRes.data.error) errDetail = invokeRes.data.error;
                   if (invokeRes.error.status === 404 || errDetail.indexOf('Failed to send') !== -1) {
-                    // Function not found on server backend
                     data = null;
                   } else {
                     throw new Error('Supabase Edge Function: ' + errDetail);
                   }
+                } else if (invokeRes.data && invokeRes.data.error) {
+                  throw new Error(invokeRes.data.error);
                 } else if (invokeRes.data && invokeRes.data.classes) {
                   data = invokeRes.data;
                 }
