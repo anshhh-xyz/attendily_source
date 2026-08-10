@@ -4,25 +4,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Attendily</title>
+  <title>Attendily — Attendance & Schedule Tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
     rel="stylesheet">
   <style>
     :root {
-      --bg: #0f141b;
-      --panel: #161d26;
-      --panel-2: #1b232e;
-      --line: #262f3b;
-      --line-soft: #1e2632;
-      --text: #eceef2;
-      --text-dim: #8993a4;
-      --text-faint: #4f5867;
-      --safe: #6fa88a;
-      --warn: #d8a94e;
-      --danger: #c4593f;
-      --primary: #6fa0c4;
+      --bg: #0b0e14;
+      --panel: #121722;
+      --panel-2: #182030;
+      --panel-hover: #1c2638;
+      --line: #1e2838;
+      --line-soft: #161f2c;
+      --line-focus: #38bdf8;
+      --text: #f1f5f9;
+      --text-dim: #94a3b8;
+      --text-faint: #475569;
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --safe: #34d399;
+      --warn: #fbbf24;
+      --danger: #f87171;
     }
 
     * {
@@ -44,9 +48,10 @@
     body {
       color: var(--text);
       font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
       background-image:
-        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
       background-size: 28px 28px;
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
       min-height: 100vh;
@@ -54,6 +59,7 @@
     }
 
     input:focus,
+    select:focus,
     button:focus-visible {
       outline: 2px solid var(--primary);
       outline-offset: 1px;
@@ -76,7 +82,7 @@
     @keyframes fadeSlideUp {
       from {
         opacity: 0;
-        transform: translateY(14px);
+        transform: translateY(12px);
       }
 
       to {
@@ -88,7 +94,7 @@
     @keyframes popIn {
       from {
         opacity: 0;
-        transform: scale(.92);
+        transform: scale(.96);
       }
 
       to {
@@ -106,31 +112,41 @@
     .wrap {
       max-width: 920px;
       margin: 0 auto;
-      padding: 24px 18px 60px;
+      padding: 24px 18px 70px;
     }
 
+    /* Brand Logo */
     .brand {
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
-    .brand-mark {
-      flex-shrink: 0;
+    .brand-mark-wrap {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
     }
 
     .brand-word {
-      font-family: 'Fraunces', serif;
-      font-weight: 600;
-      letter-spacing: -.01em;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      color: var(--text);
     }
 
     .brand-tagline {
-      font-size: 11.5px;
+      font-size: 12px;
       color: var(--text-faint);
       margin-top: 2px;
     }
 
+    /* Auth Shell */
     .auth-shell {
       min-height: 100vh;
       display: flex;
@@ -141,29 +157,29 @@
 
     .auth-card {
       width: 100%;
-      max-width: 360px;
+      max-width: 380px;
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 16px;
-      padding: 28px 26px;
+      padding: 28px 24px;
       display: flex;
       flex-direction: column;
       gap: 14px;
-      animation: fadeSlideUp .5s cubic-bezier(.2, .8, .2, 1) both;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, .35);
+      animation: fadeSlideUp .4s ease both;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
     }
 
     .auth-title {
-      font-family: 'Fraunces', serif;
-      font-size: 22px;
-      font-weight: 500;
-      margin: 14px 0 0;
+      font-size: 20px;
+      font-weight: 700;
+      margin: 8px 0 0;
+      color: var(--text);
     }
 
     .auth-sub {
-      font-size: 12.5px;
+      font-size: 13px;
       color: var(--text-dim);
-      margin: 0 0 4px;
+      margin: -4px 0 4px;
       line-height: 1.45;
     }
 
@@ -174,17 +190,17 @@
     .auth-input {
       background: var(--panel-2);
       border: 1px solid var(--line);
-      border-radius: 9px;
+      border-radius: 10px;
       color: var(--text);
       font-size: 13.5px;
-      padding: 12px 13px;
+      padding: 11px 13px;
       width: 100%;
-      transition: border-color .15s ease, box-shadow .15s ease;
+      transition: border-color .15s ease, background .15s ease;
     }
 
     .auth-input:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(111, 160, 196, .15);
+      background: #1c2638;
     }
 
     .field-wrap .auth-input {
@@ -206,35 +222,34 @@
       align-items: center;
       justify-content: center;
       border-radius: 6px;
-      transition: color .15s ease, background .15s ease;
+      transition: color .15s ease;
     }
 
     .eye-btn:hover {
       color: var(--text-dim);
-      background: rgba(255, 255, 255, .04);
     }
 
     .auth-submit {
       margin-top: 4px;
-      padding: 12px 0;
-      border-radius: 9px;
-      border: none;
+      padding: 11px 0;
+      border-radius: 10px;
+      border: 1px solid var(--primary);
       cursor: pointer;
       background: var(--primary);
-      color: #0f141b;
+      color: #0b0e14;
       font-size: 13.5px;
       font-weight: 700;
-      transition: transform .12s ease, filter .15s ease, box-shadow .15s ease;
-      box-shadow: 0 6px 20px rgba(111, 160, 196, .18);
+      transition: background .15s ease, transform .1s ease;
     }
 
     .auth-submit:hover:not(:disabled) {
-      filter: brightness(1.08);
-      box-shadow: 0 8px 24px rgba(111, 160, 196, .28);
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+      color: #ffffff;
     }
 
     .auth-submit:active:not(:disabled) {
-      transform: scale(.97);
+      transform: scale(.98);
     }
 
     .auth-submit:disabled {
@@ -249,33 +264,23 @@
       gap: 10px;
       width: 100%;
       padding: 11px 0;
-      border-radius: 9px;
+      border-radius: 10px;
       background: var(--panel-2);
       border: 1px solid var(--line);
       color: var(--text);
       font-size: 13.5px;
       font-weight: 600;
       cursor: pointer;
-      transition: background .15s ease, border-color .15s ease, transform .12s ease;
-    }
-
-    .auth-google-btn svg {
-      flex-shrink: 0;
-      display: block;
+      transition: background .15s ease, border-color .15s ease;
     }
 
     .auth-google-btn:hover:not(:disabled) {
-      background: rgba(255, 255, 255, .06);
-      border-color: rgba(255, 255, 255, .2);
+      background: var(--panel-hover);
+      border-color: var(--line-focus);
     }
 
     .auth-google-btn:active:not(:disabled) {
       transform: scale(.98);
-    }
-
-    .auth-google-btn:disabled {
-      opacity: .5;
-      cursor: default;
     }
 
     .auth-divider {
@@ -285,7 +290,7 @@
       color: var(--text-faint);
       font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: .05em;
+      letter-spacing: .06em;
       margin: 2px 0;
     }
 
@@ -313,13 +318,14 @@
       border: none;
       color: var(--primary);
       font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
       padding: 2px;
       transition: opacity .15s ease;
     }
 
     .link-btn:hover {
-      opacity: .75;
+      opacity: .8;
       text-decoration: underline;
     }
 
@@ -329,47 +335,48 @@
 
     .auth-msg {
       font-size: 12px;
-      border-radius: 9px;
-      padding: 10px 11px;
+      border-radius: 8px;
+      padding: 10px 12px;
       line-height: 1.4;
-      animation: popIn .25s ease both;
+      animation: popIn .2s ease both;
     }
 
     .auth-msg.error {
       color: var(--danger);
-      background: rgba(196, 89, 63, .1);
-      border: 1px solid rgba(196, 89, 63, .3);
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.25);
     }
 
     .auth-msg.info {
       color: var(--safe);
-      background: rgba(111, 168, 138, .1);
-      border: 1px solid rgba(111, 168, 138, .3);
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.25);
     }
 
+    /* Top Bar */
     .topbar {
       position: sticky;
       top: 0;
-      z-index: 20;
+      z-index: 30;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       margin: 0 -18px 20px;
       padding: 14px 18px;
       gap: 12px;
-      transition: background .25s ease, backdrop-filter .25s ease, border-color .25s ease;
+      transition: background .2s ease, border-color .2s ease;
       border-bottom: 1px solid transparent;
     }
 
     .topbar.scrolled {
-      background: rgba(15, 20, 27, .78);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background: rgba(11, 14, 20, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-bottom-color: var(--line);
     }
 
     .brand-word.top {
-      font-size: 22px;
+      font-size: 20px;
     }
 
     .userbar {
@@ -377,7 +384,35 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
+      margin-bottom: 20px;
+      padding: 10px 14px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
       flex-wrap: wrap;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .avatar-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--safe);
+    }
+
+    .email {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 200px;
     }
 
     .userbar-right {
@@ -386,95 +421,103 @@
       gap: 8px;
     }
 
-    .email {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 11.5px;
-      color: var(--text-faint);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 160px;
-    }
-
     .ghost-btn {
-      background: none;
+      background: transparent;
       border: 1px solid var(--line);
       color: var(--text-dim);
       border-radius: 8px;
-      padding: 7px 11px;
+      padding: 6px 11px;
       font-size: 11.5px;
+      font-weight: 500;
       cursor: pointer;
       flex-shrink: 0;
       transition: all .15s ease;
     }
 
     .ghost-btn:hover {
-      border-color: var(--primary);
-      color: var(--primary);
+      border-color: var(--line-focus);
+      color: var(--text);
+      background: var(--panel-2);
     }
 
     .ghost-btn.danger:hover {
       border-color: var(--danger);
       color: var(--danger);
+      background: rgba(248, 113, 113, 0.08);
     }
 
+    /* Action Buttons */
     .addbtn {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 10px 14px;
-      border-radius: 9px;
-      border: 1px solid var(--primary);
-      background: transparent;
-      color: var(--primary);
+      padding: 9px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
       cursor: pointer;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
       white-space: nowrap;
-      transition: transform .12s ease, background .15s ease, box-shadow .15s ease;
+      transition: all .15s ease;
     }
 
     .addbtn:hover {
-      background: rgba(111, 160, 196, .14);
-      box-shadow: 0 4px 16px rgba(111, 160, 196, .18);
+      border-color: var(--line-focus);
+      background: var(--panel-hover);
     }
 
     .addbtn:active {
-      transform: scale(.96);
+      transform: scale(.97);
     }
 
     .addbtn.active {
-      background: rgba(111, 160, 196, .14);
+      background: var(--panel-hover);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .addbtn.primary-action {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #0b0e14;
+    }
+
+    .addbtn.primary-action:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+      color: #ffffff;
     }
 
     .status-banner {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--warn);
-      background: rgba(216, 169, 78, .1);
-      border: 1px solid rgba(216, 169, 78, .3);
-      border-radius: 9px;
-      padding: 9px 11px;
-      margin-bottom: 16px;
-      animation: popIn .25s ease both;
+      background: rgba(251, 191, 36, 0.08);
+      border: 1px solid rgba(251, 191, 36, 0.25);
+      border-radius: 10px;
+      padding: 9px 12px;
+      margin-bottom: 18px;
+      animation: popIn .2s ease both;
     }
 
+    /* Overall Summary Card */
     .overall {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 16px;
-      padding: 22px 24px;
+      padding: 20px 22px;
       display: flex;
       align-items: center;
-      gap: 22px;
+      gap: 20px;
       margin-bottom: 20px;
       flex-wrap: wrap;
-      animation: fadeSlideUp .45s cubic-bezier(.2, .8, .2, 1) both;
-      transition: border-color .2s ease, box-shadow .2s ease;
+      animation: fadeSlideUp .4s ease both;
+      transition: border-color .2s ease;
     }
 
     .overall:hover {
-      border-color: var(--line-soft);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, .25);
+      border-color: #2b384e;
     }
 
     .overall-text {
@@ -482,39 +525,131 @@
       flex-direction: column;
       gap: 3px;
       min-width: 0;
+      flex: 1;
     }
 
     .overall-label {
       font-size: 11px;
-      letter-spacing: .1em;
+      letter-spacing: .08em;
       text-transform: uppercase;
       color: var(--text-faint);
+      font-weight: 600;
     }
 
     .overall-main {
-      font-family: 'Fraunces', serif;
-      font-size: 15px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
     }
 
     .overall-sub {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
       color: var(--text-dim);
+    }
+
+    /* Days Navigation Bar */
+    .days-nav-section {
+      margin-bottom: 20px;
+    }
+
+    .days-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--line) transparent;
+    }
+
+    .days-nav::-webkit-scrollbar {
+      height: 3px;
+    }
+
+    .days-nav::-webkit-scrollbar-thumb {
+      background: var(--line);
+      border-radius: 3px;
+    }
+
+    .day-tab {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text-dim);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .15s ease;
+      flex-shrink: 0;
+    }
+
+    .day-tab:hover {
+      background: var(--panel-2);
+      color: var(--text);
+      border-color: #2b384e;
+    }
+
+    .day-tab.active {
+      background: var(--panel-2);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .day-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 12px;
+      background: var(--line);
+      color: var(--text-dim);
+    }
+
+    .day-tab.active .day-badge {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+    }
+
+    .day-action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 10px 14px;
+      background: var(--panel);
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .day-action-title {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--text);
     }
 
     .empty {
       border: 1px dashed var(--line);
       border-radius: 16px;
-      padding: 44px 20px;
+      padding: 40px 20px;
       text-align: center;
       color: var(--text-dim);
-      font-size: 13px;
-      animation: fadeSlideUp .4s ease both;
+      font-size: 13.5px;
+      animation: fadeSlideUp .3s ease both;
+      background: rgba(18, 23, 34, 0.4);
     }
 
+    /* Subject Cards Grid */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 14px;
     }
 
@@ -522,45 +657,42 @@
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 14px;
-      padding: 16px 16px 14px;
+      padding: 18px;
       display: flex;
       flex-direction: column;
       gap: 12px;
       position: relative;
-      transition: transform .18s cubic-bezier(.2, .8, .2, 1), box-shadow .18s ease, border-color .18s ease;
-      will-change: transform;
+      transition: border-color .15s ease, transform .15s ease;
     }
 
     @media (hover:hover) and (pointer:fine) {
       .card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 14px 34px rgba(0, 0, 0, .35);
-        border-color: var(--line-soft);
+        transform: translateY(-2px);
+        border-color: #2b384e;
       }
     }
 
     .card.reveal {
-      animation: fadeSlideUp .4s cubic-bezier(.2, .8, .2, 1) both;
+      animation: fadeSlideUp .35s ease both;
     }
 
     .card .remove {
       position: absolute;
-      top: 8px;
-      right: 8px;
+      top: 10px;
+      right: 10px;
       background: none;
       border: none;
       color: var(--text-faint);
       cursor: pointer;
-      padding: 6px;
+      padding: 5px;
       border-radius: 6px;
       line-height: 0;
-      transition: color .15s ease, background .15s ease, transform .15s ease;
+      transition: color .15s ease, background .15s ease;
     }
 
     .card .remove:hover {
       color: var(--danger);
-      background: rgba(196, 89, 63, .1);
-      transform: rotate(90deg);
+      background: rgba(248, 113, 113, 0.1);
     }
 
     .card-head {
@@ -570,35 +702,36 @@
     }
 
     .card-name {
-      font-family: 'Fraunces', serif;
-      font-size: 17px;
-      font-weight: 500;
+      font-size: 16px;
+      font-weight: 600;
       color: var(--text);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 150px;
+      max-width: 140px;
     }
 
     .tag {
       display: inline-block;
-      margin-top: 5px;
+      margin-top: 4px;
       font-size: 10px;
       font-weight: 600;
-      letter-spacing: .06em;
+      letter-spacing: .04em;
       text-transform: uppercase;
-      border-radius: 20px;
-      padding: 2px 8px;
+      border-radius: 6px;
+      padding: 2px 7px;
     }
 
     .tag.theory {
       color: var(--text-dim);
+      background: var(--panel-2);
       border: 1px solid var(--line);
     }
 
     .tag.lab {
       color: var(--primary);
-      border: 1px solid var(--primary);
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
     }
 
     .steppers {
@@ -617,10 +750,8 @@
     }
 
     .stepper .label {
-      font-size: 12px;
+      font-size: 12.5px;
       color: var(--text-dim);
-      width: 58px;
-      flex-shrink: 0;
     }
 
     .stepper .controls {
@@ -635,31 +766,30 @@
       border-radius: 8px;
       border: 1px solid var(--line);
       background: var(--panel-2);
-      color: var(--text-dim);
+      color: var(--text);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
       touch-action: manipulation;
-      transition: border-color .15s ease, color .15s ease, transform .1s ease, background .15s ease;
+      transition: all .15s ease;
     }
 
     @media (hover:hover) and (pointer:fine) {
       .stepbtn:hover {
-        border-color: var(--primary);
-        color: var(--text);
-        background: rgba(111, 160, 196, .1);
+        border-color: var(--line-focus);
+        background: var(--panel-hover);
       }
     }
 
     .stepbtn:active {
-      transform: scale(.88);
+      transform: scale(.9);
     }
 
     .stepval {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'JetBrains Mono', monospace;
       font-size: 14px;
       font-weight: 600;
       width: 26px;
@@ -687,7 +817,7 @@
     .mininput-wrap {
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
     }
 
     .mininput {
@@ -696,8 +826,9 @@
       border: 1px solid var(--line);
       border-radius: 7px;
       color: var(--text);
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
+      font-weight: 600;
       text-align: right;
       padding: 4px 5px;
       transition: border-color .15s ease;
@@ -708,19 +839,19 @@
     }
 
     .pct-sign {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
       color: var(--text-dim);
     }
 
     .message {
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 500;
       background: var(--panel-2);
-      border-radius: 9px;
-      padding: 9px 10px;
+      border-radius: 8px;
+      padding: 9px 11px;
       line-height: 1.35;
-      transition: background .2s ease;
+      transition: all .2s ease;
     }
 
     .ring-wrap {
@@ -738,8 +869,8 @@
     }
 
     .ring-num .n {
-      font-family: 'IBM Plex Mono', monospace;
-      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
       color: var(--text);
       display: block;
       line-height: 1;
@@ -747,24 +878,25 @@
 
     .ring-num .l {
       font-family: 'Inter', sans-serif;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--text-faint);
       display: block;
       margin-top: 2px;
     }
 
+    /* Modal / Form Overlay */
     .panel-form {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 18px;
+      border-radius: 16px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 12px;
       margin-bottom: 20px;
-      max-width: 340px;
-      animation: fadeSlideUp .3s cubic-bezier(.2, .8, .2, 1) both;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, .3);
+      max-width: 420px;
+      animation: fadeSlideUp .3s ease both;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, .35);
     }
 
     .panel-form-head {
@@ -774,8 +906,8 @@
     }
 
     .panel-form-head span {
-      font-family: 'Fraunces', serif;
-      font-size: 15px;
+      font-size: 16px;
+      font-weight: 600;
     }
 
     .panel-form-head button {
@@ -784,12 +916,12 @@
       color: var(--text-faint);
       cursor: pointer;
       padding: 4px;
-      transition: transform .15s ease, color .15s ease;
+      border-radius: 6px;
+      transition: color .15s ease;
     }
 
     .panel-form-head button:hover {
       color: var(--text);
-      transform: rotate(90deg);
     }
 
     .panel-form input[type=text] {
@@ -797,7 +929,7 @@
       border: 1px solid var(--line);
       border-radius: 9px;
       color: var(--text);
-      font-size: 13px;
+      font-size: 13.5px;
       padding: 11px;
       width: 100%;
       transition: border-color .15s ease;
@@ -820,7 +952,6 @@
       font-size: 12px;
       font-weight: 600;
       text-transform: capitalize;
-      letter-spacing: .03em;
       border: 1px solid var(--line);
       background: var(--panel-2);
       color: var(--text-dim);
@@ -829,25 +960,26 @@
 
     .type-btn.active {
       border-color: var(--primary);
-      background: rgba(111, 160, 196, .12);
+      background: rgba(56, 189, 248, 0.12);
       color: var(--primary);
     }
 
     .submit-btn {
-      margin-top: 2px;
-      padding: 12px 0;
-      border-radius: 9px;
+      margin-top: 4px;
+      padding: 11px 0;
+      border-radius: 10px;
       border: none;
       cursor: pointer;
       background: var(--primary);
-      color: #0f141b;
-      font-size: 13px;
+      color: #0b0e14;
+      font-size: 13.5px;
       font-weight: 700;
-      transition: transform .12s ease, filter .15s ease;
+      transition: background .15s ease, transform .1s ease;
     }
 
     .submit-btn:hover {
-      filter: brightness(1.08);
+      background: var(--primary-hover);
+      color: #ffffff;
     }
 
     .submit-btn:active {
@@ -904,7 +1036,7 @@
       border: 1px solid var(--line);
       border-radius: 24px;
       cursor: pointer;
-      transition: background .2s ease, border-color .2s ease;
+      transition: all .2s ease;
     }
 
     .switch-track::before {
@@ -913,14 +1045,14 @@
       width: 16px;
       height: 16px;
       left: 3px;
-      top: 2px;
+      top: 3px;
       background: var(--text-dim);
       border-radius: 50%;
-      transition: transform .2s cubic-bezier(.2, .8, .2, 1), background .2s ease;
+      transition: transform .2s ease, background .2s ease;
     }
 
     .switch input:checked+.switch-track {
-      background: rgba(111, 160, 196, .25);
+      background: rgba(56, 189, 248, 0.2);
       border-color: var(--primary);
     }
 
@@ -929,17 +1061,12 @@
       background: var(--primary);
     }
 
-    .switch input:disabled+.switch-track {
-      opacity: .5;
-      cursor: default;
-    }
-
     .spinner {
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      border: 2px solid rgba(15, 20, 27, .25);
-      border-top-color: #0f141b;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
       animation: spin .7s linear infinite;
       display: inline-block;
       vertical-align: middle;
@@ -947,7 +1074,7 @@
 
     @media (max-width:480px) {
       .wrap {
-        padding: 16px 12px 48px;
+        padding: 16px 12px 50px;
       }
 
       .topbar {
@@ -956,17 +1083,17 @@
       }
 
       .brand-word.top {
-        font-size: 19px;
+        font-size: 18px;
       }
 
       .addbtn {
-        padding: 9px 12px;
-        font-size: 12.5px;
+        padding: 8px 12px;
+        font-size: 12px;
       }
 
       .overall {
         padding: 16px;
-        gap: 16px;
+        gap: 14px;
       }
 
       .grid {
@@ -982,17 +1109,11 @@
       }
 
       .email {
-        max-width: 120px;
+        max-width: 130px;
       }
 
       .auth-card {
         padding: 24px 20px;
-      }
-    }
-
-    @media (min-width:481px) and (max-width:700px) {
-      .grid {
-        grid-template-columns: repeat(2, 1fr);
       }
     }
   </style>
@@ -1010,17 +1131,18 @@
   <div class="wrap hidden" id="appShell">
     <div class="topbar" id="topbar">
       <div class="brand">
-        <svg class="brand-mark" width="30" height="30" viewBox="0 0 30 30">
-          <circle cx="15" cy="15" r="12" fill="none" stroke="var(--line)" stroke-width="3.2" />
-          <circle cx="15" cy="15" r="12" fill="none" stroke="var(--primary)" stroke-width="3.2" stroke-linecap="round"
-            stroke-dasharray="56 75.4" transform="rotate(-90 15 15)" />
-        </svg>
+        <div class="brand-mark-wrap">
+          <svg class="brand-mark" width="20" height="20" viewBox="0 0 30 30">
+            <circle cx="15" cy="15" r="12" fill="none" stroke="var(--line)" stroke-width="3" />
+            <circle cx="15" cy="15" r="12" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round"
+              stroke-dasharray="56 75.4" transform="rotate(-90 15 15)" />
+          </svg>
+        </div>
         <div class="brand-word top">Attendily</div>
       </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button class="addbtn" id="groupToggleBtn" onclick="toggleGroupByDay()">By day</button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
         <button class="addbtn" id="scheduleToggleBtn" onclick="toggleSchedule()">Schedule</button>
-        <button class="addbtn" id="addToggleBtn" onclick="toggleAddForm()">+ Add subject</button>
+        <button class="addbtn primary-action" id="addToggleBtn" onclick="toggleAddForm(null)">+ Add subject</button>
       </div>
     </div>
 
@@ -1028,7 +1150,10 @@
     <div id="scheduleMount"></div>
 
     <div class="userbar">
-      <span class="email" id="userEmailLabel"></span>
+      <div class="user-pill">
+        <span class="avatar-dot"></span>
+        <span class="email" id="userEmailLabel"></span>
+      </div>
       <div class="userbar-right">
         <button class="ghost-btn" onclick="AUTH.togglePwPanel()">Change password</button>
         <button class="ghost-btn danger" onclick="AUTH.signOut()">Sign out</button>
@@ -1037,7 +1162,18 @@
 
     <div id="pwPanelMount"></div>
     <div id="statusMount"></div>
+
+    <!-- Overall Card -->
     <div class="overall" id="overallCard"></div>
+
+    <!-- Days Navigation Bar -->
+    <div class="days-nav-section">
+      <div class="days-nav" id="daysNavMount"></div>
+    </div>
+
+    <!-- Active Day Context Bar -->
+    <div id="dayActionBarMount"></div>
+
     <div id="addFormMount"></div>
     <div id="mainMount"></div>
   </div>
@@ -1054,10 +1190,17 @@
       }
 
       var subjects = [];
+      var schedule = [];
       var loaded = false;
       var showAdd = false;
+      var addPresetDay = null; // null = overall, or number 0-6
+      var activeDayTab = 'all'; // 'all' or number 0-6
       var currentUser = null;
       var firstRender = true;
+
+      var DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      var DAY_FULL_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      var DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Mon to Sun
 
       var EYE_OPEN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
       var EYE_CLOSED = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
@@ -1078,26 +1221,28 @@
         var mount = document.getElementById('authCardMount');
         var brandBlock =
           '<div class="brand">' +
-          '<svg class="brand-mark" width="34" height="34" viewBox="0 0 30 30">' +
-          '<circle cx="15" cy="15" r="12" fill="none" stroke="var(--line)" stroke-width="3.2"/>' +
-          '<circle cx="15" cy="15" r="12" fill="none" stroke="var(--primary)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="56 75.4" transform="rotate(-90 15 15)"/>' +
+          '<div class="brand-mark-wrap">' +
+          '<svg width="20" height="20" viewBox="0 0 30 30">' +
+          '<circle cx="15" cy="15" r="12" fill="none" stroke="var(--line)" stroke-width="3"/>' +
+          '<circle cx="15" cy="15" r="12" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" stroke-dasharray="56 75.4" transform="rotate(-90 15 15)"/>' +
           '</svg>' +
-          '<div><div class="brand-word" style="font-size:22px;">Attendily</div><div class="brand-tagline">Attendance, without the guesswork.</div></div>' +
+          '</div>' +
+          '<div><div class="brand-word" style="font-size:20px;">Attendily</div><div class="brand-tagline">Attendance, without guesswork.</div></div>' +
           '</div>';
 
         if (authMode === 'forgot') {
           mount.innerHTML =
             brandBlock +
-            '<div class="auth-title">Reset your password</div>' +
+            '<div class="auth-title">Reset password</div>' +
             '<p class="auth-sub">Enter your email and we\'ll send a reset link.</p>' +
             '<div id="authMsgMount"></div>' +
-            '<input class="auth-input" type="email" id="authEmail" placeholder="Email" autocomplete="email"/>' +
+            '<input class="auth-input" type="email" id="authEmail" placeholder="Email address" autocomplete="email"/>' +
             '<button class="auth-submit" id="authSubmitBtn" onclick="AUTH.sendReset()">Send reset link</button>' +
             '<div class="auth-links"><button class="link-btn muted" onclick="AUTH.toggleMode(\'signin\')">&larr; Back to sign in</button></div>';
         } else if (authMode === 'reset') {
           mount.innerHTML =
             brandBlock +
-            '<div class="auth-title">Set a new password</div>' +
+            '<div class="auth-title">Set new password</div>' +
             '<p class="auth-sub">Choose a new password for your account.</p>' +
             '<div id="authMsgMount"></div>' +
             fieldWithEye('authNewPassword', 'New password', 'new-password') +
@@ -1108,18 +1253,18 @@
           mount.innerHTML =
             brandBlock +
             '<div class="auth-title">' + (isSignup ? 'Create account' : 'Sign in') + '</div>' +
-            '<p class="auth-sub">' + (isSignup ? 'One account works across your phone, laptop, and any browser.' : 'Use your email to track attendance across every device.') + '</p>' +
+            '<p class="auth-sub">' + (isSignup ? 'Track attendance across all your devices.' : 'Use your email to access your schedule.') + '</p>' +
             '<div id="authMsgMount"></div>' +
             '<button class="auth-google-btn" id="googleSignInBtn" onclick="AUTH.signInWithGoogle()">' +
             '<svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>' +
             '<span>' + (isSignup ? 'Sign up with Google' : 'Sign in with Google') + '</span>' +
             '</button>' +
             '<div class="auth-divider"><span>or</span></div>' +
-            '<input class="auth-input" type="email" id="authEmail" placeholder="Email" autocomplete="email"/>' +
+            '<input class="auth-input" type="email" id="authEmail" placeholder="Email address" autocomplete="email"/>' +
             fieldWithEye('authPassword', 'Password', isSignup ? 'new-password' : 'current-password') +
             '<button class="auth-submit" id="authSubmitBtn" onclick="AUTH.submit()">' + (isSignup ? 'Sign up' : 'Sign in') + '</button>' +
             '<div class="auth-links">' +
-            '<button class="link-btn" onclick="AUTH.toggleMode(\'' + (isSignup ? 'signin' : 'signup') + '\')">' + (isSignup ? 'Already have an account? Sign in' : 'New here? Create an account') + '</button>' +
+            '<button class="link-btn" onclick="AUTH.toggleMode(\'' + (isSignup ? 'signin' : 'signup') + '\')">' + (isSignup ? 'Already have an account? Sign in' : 'New here? Create account') + '</button>' +
             (isSignup ? '' : '<button class="link-btn muted" onclick="AUTH.toggleMode(\'forgot\')">Forgot password?</button>') +
             '</div>';
         }
@@ -1146,9 +1291,7 @@
           try {
             var res = await supabase.auth.signInWithOAuth({
               provider: 'google',
-              options: {
-                redirectTo: window.location.origin
-              }
+              options: { redirectTo: window.location.origin }
             });
             if (res.error) throw res.error;
           } catch (e) {
@@ -1282,9 +1425,11 @@
           }
           currentUser = null;
           subjects = [];
+          schedule = [];
           showAdd = false;
           pwPanelOpen = false;
           firstRender = true;
+          activeDayTab = 'all';
           document.getElementById('appShell').classList.add('hidden');
           document.getElementById('authShell').classList.remove('hidden');
           authMode = 'signin';
@@ -1297,7 +1442,7 @@
         if (!pwPanelOpen) { mount.innerHTML = ''; return; }
         mount.innerHTML =
           '<div class="panel-form">' +
-          '<div class="panel-form-head"><span>Change password</span><button onclick="AUTH.togglePwPanel()">&#10005;</button></div>' +
+          '<div class="panel-form-head"><span>Change Password</span><button onclick="AUTH.togglePwPanel()">&#10005;</button></div>' +
           '<div id="appPwMsg"></div>' +
           fieldWithEyeApp('appNewPassword', 'New password') +
           fieldWithEyeApp('appNewPassword2', 'Confirm new password') +
@@ -1320,6 +1465,11 @@
         document.getElementById('authShell').classList.add('hidden');
         document.getElementById('appShell').classList.remove('hidden');
         document.getElementById('userEmailLabel').textContent = user.email;
+
+        // Set default active tab to today
+        var todayIndex = new Date().getDay();
+        activeDayTab = todayIndex;
+
         loadData();
         checkConfirmParam();
       }
@@ -1346,7 +1496,7 @@
         var mount = document.getElementById('statusMount');
         if (!msg) { mount.innerHTML = ''; return; }
         mount.innerHTML = '<div class="status-banner" style="' +
-          (isError ? 'color:var(--danger);background:rgba(196,89,63,.1);border-color:rgba(196,89,63,.3);' : '') +
+          (isError ? 'color:var(--danger);background:rgba(248,113,113,0.08);border-color:rgba(248,113,113,0.25);' : '') +
           '">' + msg + '</div>';
       }
 
@@ -1420,7 +1570,7 @@
         var progressCircle = pct !== null ? (
           '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + ringColor + '" stroke-width="' + stroke + '" ' +
           'stroke-dasharray="' + dash + ' ' + (c - dash) + '" stroke-linecap="round" transform="rotate(-90 ' + cx + ' ' + cy + ')" ' +
-          'style="transition:stroke-dasharray .4s cubic-bezier(.2,.8,.2,1), stroke .3s ease"/>'
+          'style="transition:stroke-dasharray .4s cubic-bezier(.16,1,.3,1), stroke .3s ease"/>'
         ) : '';
 
         return (
@@ -1449,6 +1599,8 @@
 
       function render() {
         renderOverall();
+        renderDaysNav();
+        renderDayActionBar();
         renderAddForm();
         renderMain();
         firstRender = false;
@@ -1464,65 +1616,143 @@
         var avgMin = subjects.length ? subjects.reduce(function (a, s) { return a + s.min; }, 0) / subjects.length : 75;
 
         var mainText = overallPct === null
-          ? 'No data yet'
+          ? 'No classes logged yet'
           : overallPct.toFixed(1) + '% average across ' + withData.length + ' subject' + (withData.length !== 1 ? 's' : '');
 
         document.getElementById('overallCard').innerHTML =
-          ringWithLabel(overallPct, avgMin, 92, 8, true) +
+          ringWithLabel(overallPct, avgMin, 84, 7, true) +
           '<div class="overall-text">' +
-          '<span class="overall-label">Overall attendance</span>' +
+          '<span class="overall-label">Overall Attendance</span>' +
           '<span class="overall-main">' + mainText + '</span>' +
-          '<span class="overall-sub">' + totalAttended + ' / ' + totalClasses + ' classes logged</span>' +
+          '<span class="overall-sub">' + totalAttended + ' / ' + totalClasses + ' classes attended</span>' +
           '</div>';
+      }
+
+      function selectDayTab(day) {
+        activeDayTab = day;
+        render();
+      }
+      window.selectDayTab = selectDayTab;
+
+      function renderDaysNav() {
+        var mount = document.getElementById('daysNavMount');
+        var html = '';
+
+        // "All Days" Tab
+        var totalSubjectsCount = subjects.length;
+        var isAllActive = activeDayTab === 'all';
+        html += '<button class="day-tab ' + (isAllActive ? 'active' : '') + '" onclick="selectDayTab(\'all\')">' +
+          '<span>All Days</span>' +
+          '<span class="day-badge">' + totalSubjectsCount + '</span>' +
+          '</button>';
+
+        // Mon - Sun Tabs
+        DAY_ORDER.forEach(function (day) {
+          var count = schedule.filter(function (c) { return c.day_of_week === day; }).length;
+          var isActive = activeDayTab === day;
+          html += '<button class="day-tab ' + (isActive ? 'active' : '') + '" onclick="selectDayTab(' + day + ')">' +
+            '<span>' + DAY_NAMES[day] + '</span>' +
+            '<span class="day-badge">' + count + '</span>' +
+            '</button>';
+        });
+
+        mount.innerHTML = html;
+      }
+
+      function renderDayActionBar() {
+        var mount = document.getElementById('dayActionBarMount');
+        if (activeDayTab === 'all') {
+          mount.innerHTML =
+            '<div class="day-action-bar">' +
+            '<div class="day-action-title">All Subjects (' + subjects.length + ')</div>' +
+            '<button class="addbtn primary-action" onclick="toggleAddForm(null)">+ Add subject</button>' +
+            '</div>';
+        } else {
+          var dayName = DAY_FULL_NAMES[activeDayTab];
+          var daySlots = schedule.filter(function (c) { return c.day_of_week === activeDayTab; });
+          mount.innerHTML =
+            '<div class="day-action-bar">' +
+            '<div class="day-action-title">' + dayName + '\'s Schedule (' + daySlots.length + ' class' + (daySlots.length !== 1 ? 'es' : '') + ')</div>' +
+            '<button class="addbtn primary-action" onclick="toggleAddForm(' + activeDayTab + ')">+ Add subject to ' + DAY_NAMES[activeDayTab] + '</button>' +
+            '</div>';
+        }
       }
 
       var addFormType = 'theory';
       var addFormSetTime = false;
 
+      function toggleAddForm(presetDay) {
+        if (showAdd && addPresetDay === presetDay) {
+          showAdd = false;
+        } else {
+          showAdd = true;
+          addPresetDay = presetDay !== undefined ? presetDay : null;
+          addFormSetTime = addPresetDay !== null;
+        }
+        render();
+      }
+      window.toggleAddForm = toggleAddForm;
+
       function renderAddForm() {
         var mount = document.getElementById('addFormMount');
-        if (!showAdd) { mount.innerHTML = ''; document.getElementById('addToggleBtn').classList.remove('active'); return; }
-        document.getElementById('addToggleBtn').classList.add('active');
-        document.getElementById('addToggleBtn').textContent = '+ Add subject';
+        var addBtn = document.getElementById('addToggleBtn');
 
-        var dayOptions = DAY_NAMES.map(function (d, i) { return '<option value="' + i + '">' + d + '</option>'; }).join('');
+        if (!showAdd) {
+          mount.innerHTML = '';
+          if (addBtn) addBtn.classList.remove('active');
+          return;
+        }
+
+        if (addBtn) addBtn.classList.add('active');
+
+        var isDayPreset = addPresetDay !== null && addPresetDay !== undefined;
+        var dayOptions = DAY_NAMES.map(function (d, i) {
+          var selected = isDayPreset && addPresetDay === i ? 'selected' : '';
+          return '<option value="' + i + '" ' + selected + '>' + d + '</option>';
+        }).join('');
+
+        var headerTitle = isDayPreset
+          ? 'Add Subject to ' + DAY_FULL_NAMES[addPresetDay]
+          : 'New Subject';
+
+        var presetNotice = isDayPreset
+          ? '<div style="font-size:12px; font-weight:500; color:var(--primary); background:rgba(56,189,248,0.08); padding:8px 12px; border-radius:8px; border:1px solid rgba(56,189,248,0.2);">' +
+          'Automatically adding to ' + DAY_FULL_NAMES[addPresetDay] +
+          '</div>'
+          : '';
 
         mount.innerHTML =
           '<div class="panel-form">' +
-          '<div class="panel-form-head"><span>New subject</span><button onclick="AT.closeAdd()">&#10005;</button></div>' +
-          '<input type="text" id="newSubjectName" placeholder="Subject name" maxlength="40"/>' +
+          '<div class="panel-form-head"><span>' + headerTitle + '</span><button onclick="AT.closeAdd()">&#10005;</button></div>' +
+          presetNotice +
+          '<input type="text" id="newSubjectName" placeholder="Subject name (e.g. Mathematics)" maxlength="40"/>' +
           '<div class="type-row">' +
           '<button type="button" class="type-btn ' + (addFormType === 'theory' ? 'active' : '') + '" onclick="AT.setType(\'theory\')">Theory</button>' +
           '<button type="button" class="type-btn ' + (addFormType === 'lab' ? 'active' : '') + '" onclick="AT.setType(\'lab\')">Lab</button>' +
           '</div>' +
           '<div class="minrow" style="border-top:none; padding-top:0;">' +
-          '<span class="lbl">Min attendance required</span>' +
+          '<span class="lbl">Required Attendance</span>' +
           '<div class="mininput-wrap"><input class="mininput" type="number" id="newSubjectMin" min="0" max="100" value="75"/><span class="pct-sign">%</span></div>' +
           '</div>' +
-          '<label style="display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-dim); cursor:pointer;">' +
-          '<input type="checkbox" id="newSubjectSetTime" ' + (addFormSetTime ? 'checked' : '') + ' onchange="AT.toggleTimeFields(this.checked)"/> Set a class day and time' +
-          '</label>' +
-          '<div id="newSubjectTimeFields" class="' + (addFormSetTime ? '' : 'hidden') + '" style="display:flex; gap:6px;">' +
-          '<select class="auth-input" id="newSubjectDay" style="flex:1;">' + dayOptions + '</select>' +
-          '<input class="auth-input" type="time" id="newSubjectStart" style="flex:1;"/>' +
-          '<input class="auth-input" type="time" id="newSubjectEnd" style="flex:1;"/>' +
+          (!isDayPreset ? (
+            '<label style="display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-dim); cursor:pointer;">' +
+            '<input type="checkbox" id="newSubjectSetTime" ' + (addFormSetTime ? 'checked' : '') + ' onchange="AT.toggleTimeFields(this.checked)"/> Set class day & time' +
+            '</label>'
+          ) : '<input type="checkbox" id="newSubjectSetTime" checked style="display:none;"/>') +
+          '<div id="newSubjectTimeFields" class="' + (addFormSetTime || isDayPreset ? '' : 'hidden') + '" style="display:flex; gap:8px; flex-wrap:wrap;">' +
+          '<select class="auth-input" id="newSubjectDay" style="flex:1; min-width:110px;" ' + (isDayPreset ? 'disabled' : '') + '>' + dayOptions + '</select>' +
+          '<input class="auth-input" type="time" id="newSubjectStart" value="09:00" style="flex:1; min-width:110px;"/>' +
+          '<input class="auth-input" type="time" id="newSubjectEnd" value="10:00" style="flex:1; min-width:110px;"/>' +
           '</div>' +
-          '<button class="submit-btn" onclick="AT.submitAdd()">Add subject</button>' +
+          '<button class="submit-btn" onclick="AT.submitAdd()">Save Subject</button>' +
           '</div>';
 
         var nameInput = document.getElementById('newSubjectName');
-        nameInput.focus();
-        nameInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') AT.submitAdd(); });
+        if (nameInput) {
+          nameInput.focus();
+          nameInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') AT.submitAdd(); });
+        }
       }
-
-      var groupByDay = false;
-
-      function toggleGroupByDay() {
-        groupByDay = !groupByDay;
-        document.getElementById('groupToggleBtn').classList.toggle('active', groupByDay);
-        renderMain();
-      }
-      window.toggleGroupByDay = toggleGroupByDay;
 
       function slotsForSubject(subjectId) {
         return schedule.filter(function (c) { return c.subject_id === subjectId; })
@@ -1536,50 +1766,40 @@
       function renderMain() {
         var mount = document.getElementById('mainMount');
         if (subjects.length === 0) {
-          mount.innerHTML = showAdd ? '' : '<div class="empty">No subjects yet. Add your first one to start tracking.</div>';
+          mount.innerHTML = showAdd ? '' : '<div class="empty">No subjects added yet. Click "+ Add subject" to start.</div>';
           return;
         }
-        if (groupByDay) {
-          renderMainGrouped(mount);
-        } else {
-          var html = '<div class="grid">';
-          subjects.forEach(function (s, i) { html += cardHTML(s, i, null); });
-          html += '</div>';
-          mount.innerHTML = html;
-        }
-      }
 
-      function renderMainGrouped(mount) {
-        var order = [1, 2, 3, 4, 5, 6, 0];
-        var html = '';
         var cardIndex = 0;
-        var seenAny = false;
+        var html = '';
 
-        order.forEach(function (day) {
-          var daySlots = schedule.filter(function (c) { return c.day_of_week === day; })
-            .sort(function (a, b) { return a.start_time.localeCompare(b.start_time); });
-          if (daySlots.length === 0) return;
-          seenAny = true;
-          html += '<div style="margin:22px 0 10px; font-family:\'Fraunces\',serif; font-size:15px; color:var(--text-dim);">' + DAY_NAMES[day] + '</div>';
-          html += '<div class="grid">';
-          daySlots.forEach(function (slot) {
-            var s = subjects.find(function (x) { return x.id === slot.subject_id; });
-            if (!s) return;
-            html += cardHTML(s, cardIndex++, slotLabel(slot));
+        if (activeDayTab === 'all') {
+          // Show all subjects
+          html = '<div class="grid">';
+          subjects.forEach(function (s) {
+            html += cardHTML(s, cardIndex++, null);
           });
           html += '</div>';
-        });
+        } else {
+          // Show subjects scheduled on activeDayTab
+          var daySlots = schedule.filter(function (c) { return c.day_of_week === activeDayTab; })
+            .sort(function (a, b) { return a.start_time.localeCompare(b.start_time); });
 
-        var unscheduled = subjects.filter(function (s) { return slotsForSubject(s.id).length === 0; });
-        if (unscheduled.length) {
-          html += '<div style="margin:22px 0 10px; font-family:\'Fraunces\',serif; font-size:15px; color:var(--text-dim);">No schedule set</div>';
-          html += '<div class="grid">';
-          unscheduled.forEach(function (s) { html += cardHTML(s, cardIndex++, null); });
-          html += '</div>';
-        }
-
-        if (!seenAny && !unscheduled.length) {
-          html = '<div class="empty">Nothing scheduled yet.</div>';
+          if (daySlots.length === 0) {
+            html = '<div class="empty">' +
+              '<div style="font-size:15px; font-weight:600; color:var(--text); margin-bottom:4px;">No classes on ' + DAY_FULL_NAMES[activeDayTab] + '</div>' +
+              '<div style="margin-bottom:14px;">Click below to add a class for this day.</div>' +
+              '<button class="addbtn primary-action" onclick="toggleAddForm(' + activeDayTab + ')">+ Add subject to ' + DAY_NAMES[activeDayTab] + '</button>' +
+              '</div>';
+          } else {
+            html = '<div class="grid">';
+            daySlots.forEach(function (slot) {
+              var s = subjects.find(function (x) { return x.id === slot.subject_id; });
+              if (!s) return;
+              html += cardHTML(s, cardIndex++, slotLabel(slot));
+            });
+            html += '</div>';
+          }
         }
 
         mount.innerHTML = html;
@@ -1590,28 +1810,28 @@
         var color = statusColor(r.status);
         var message;
         if (r.status === 'empty') message = 'No classes logged yet';
-        else if (r.status === 'impossible') message = s.missed > 0 ? "100% is no longer reachable" : "Can't miss a single class";
-        else if (r.status === 'danger') message = 'Attend next ' + r.mustAttend + ' in a row to reach ' + s.min + '%';
-        else if (r.status === 'warn') message = "On the edge — can't miss any";
+        else if (r.status === 'impossible') message = s.missed > 0 ? "100% target missed" : "Cannot miss any class";
+        else if (r.status === 'danger') message = 'Attend next ' + r.mustAttend + ' class' + (r.mustAttend !== 1 ? 'es' : '') + ' to reach ' + s.min + '%';
+        else if (r.status === 'warn') message = "On boundary — 0 misses allowed";
         else message = 'Can afford to miss ' + r.canMiss + ' more';
 
         var safeName = s.name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
         var revealClass = firstRender ? ' reveal' : '';
-        var revealStyle = firstRender ? ' style="animation-delay:' + (i * 45) + 'ms;"' : '';
+        var revealStyle = firstRender ? ' style="animation-delay:' + (i * 35) + 'ms;"' : '';
 
         var slots = slotsForSubject(s.id);
         var whenHTML = '';
         if (slotText) {
-          whenHTML = '<div style="font-family:\'IBM Plex Mono\',monospace; font-size:10.5px; color:var(--text-faint); margin-top:4px;">' + slotText + '</div>';
+          whenHTML = '<div style="font-family:\'JetBrains Mono\',monospace; font-size:11px; color:var(--primary); margin-top:4px;">' + slotText + '</div>';
         } else if (slots.length) {
-          whenHTML = '<div style="font-family:\'IBM Plex Mono\',monospace; font-size:10.5px; color:var(--text-faint); margin-top:4px;">' + slots.map(slotLabel).join(', ') + '</div>';
+          whenHTML = '<div style="font-family:\'JetBrains Mono\',monospace; font-size:11px; color:var(--text-faint); margin-top:4px;">' + slots.map(slotLabel).join(', ') + '</div>';
         }
 
         return (
           '<div class="card' + revealClass + '"' + revealStyle + '>' +
           '<button class="remove" onclick="AT.removeSubject(\'' + s.id + '\')" aria-label="remove subject">&#10005;</button>' +
           '<div class="card-head">' +
-          ringWithLabel(r.pct, s.min, 76, 7, false) +
+          ringWithLabel(r.pct, s.min, 72, 6, false) +
           '<div style="min-width:0;">' +
           '<div class="card-name">' + safeName + '</div>' +
           '<span class="tag ' + s.type + '">' + s.type + '</span>' +
@@ -1647,35 +1867,46 @@
         );
       }
 
-      function toggleAddForm() { showAdd = !showAdd; render(); }
-
       window.AT = {
         setType: function (t) { addFormType = t; renderAddForm(); },
         closeAdd: function () { showAdd = false; render(); },
 
         toggleTimeFields: function (checked) {
           addFormSetTime = checked;
-          document.getElementById('newSubjectTimeFields').classList.toggle('hidden', !checked);
+          var el = document.getElementById('newSubjectTimeFields');
+          if (el) el.classList.toggle('hidden', !checked);
         },
 
         submitAdd: async function () {
           var nameInput = document.getElementById('newSubjectName');
           var minInput = document.getElementById('newSubjectMin');
-          var name = nameInput.value.trim();
-          if (!name) { nameInput.focus(); return; }
-          var min = clamp(parseInt(minInput.value || '0', 10), 0, 100);
-          var setTime = document.getElementById('newSubjectSetTime').checked;
-          var day = setTime ? parseInt(document.getElementById('newSubjectDay').value, 10) : null;
-          var start = setTime ? document.getElementById('newSubjectStart').value : null;
-          var end = setTime ? document.getElementById('newSubjectEnd').value : null;
+          var name = nameInput ? nameInput.value.trim() : '';
+          if (!name) { if (nameInput) nameInput.focus(); return; }
+
+          var min = clamp(parseInt((minInput ? minInput.value : '75') || '0', 10), 0, 100);
+
+          var isDayPreset = addPresetDay !== null && addPresetDay !== undefined;
+          var setTimeCheckbox = document.getElementById('newSubjectSetTime');
+          var setTime = isDayPreset || (setTimeCheckbox && setTimeCheckbox.checked);
+
+          var daySelect = document.getElementById('newSubjectDay');
+          var day = isDayPreset ? addPresetDay : (daySelect ? parseInt(daySelect.value, 10) : null);
+
+          var startInput = document.getElementById('newSubjectStart');
+          var endInput = document.getElementById('newSubjectEnd');
+          var start = startInput ? startInput.value || '09:00' : '09:00';
+          var end = endInput ? endInput.value || '10:00' : '10:00';
+
           try {
             var res = await supabase.from('subjects')
               .insert([{ name: name, type: addFormType, min_attendance: min, attended: 0, missed: 0 }])
               .select();
             if (res.error) throw res.error;
+
             var newSubject = res.data[0];
             subjects.push(rowToLocal(newSubject));
-            if (setTime && start && end) {
+
+            if (setTime && day !== null && start && end) {
               var schedRes = await supabase.from('class_schedule')
                 .insert([{ subject_id: newSubject.id, day_of_week: day, start_time: start, end_time: end }]);
               if (schedRes.error) throw schedRes.error;
@@ -1684,9 +1915,11 @@
           } catch (e) {
             showStatus("Couldn't add subject: " + e.message, true);
           }
+
           addFormType = 'theory';
           addFormSetTime = false;
           showAdd = false;
+          addPresetDay = null;
           await loadSchedule();
         },
 
@@ -1742,15 +1975,14 @@
         }
       };
 
-      var DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      var schedule = [];
       var showSchedule = false;
       var importDraft = null;
       var pushEnabled = false;
 
       function toggleSchedule() {
         showSchedule = !showSchedule;
-        document.getElementById('scheduleToggleBtn').classList.toggle('active', showSchedule);
+        var btn = document.getElementById('scheduleToggleBtn');
+        if (btn) btn.classList.toggle('active', showSchedule);
         if (showSchedule) { refreshPushState().then(loadSchedule); } else { document.getElementById('scheduleMount').innerHTML = ''; }
       }
       window.toggleSchedule = toggleSchedule;
@@ -1784,8 +2016,8 @@
 
         var rows = schedule.map(function (c) {
           return (
-            '<div class="stepper" style="border-top:1px solid var(--line-soft); padding-top:8px;">' +
-            '<span class="label" style="width:auto; flex:1;">' + DAY_NAMES[c.day_of_week] + ' ' + c.start_time.slice(0, 5) + '\u2013' + c.end_time.slice(0, 5) + ' \u00b7 ' + (c.subjects ? c.subjects.name : '') + '</span>' +
+            '<div class="stepper" style="border-top:1px solid var(--line-soft); padding-top:10px;">' +
+            '<span class="label" style="width:auto; flex:1; font-weight:500; color:var(--text);">' + DAY_NAMES[c.day_of_week] + ' ' + c.start_time.slice(0, 5) + '\u2013' + c.end_time.slice(0, 5) + ' \u00b7 ' + (c.subjects ? c.subjects.name : '') + '</span>' +
             '<div class="controls">' +
             '<button class="ghost-btn" onclick="SCHEDULE.cancelNext(\'' + c.id + '\')">Cancel next</button>' +
             '<button class="remove" style="position:static;" onclick="SCHEDULE.removeClass(\'' + c.id + '\')">&#10005;</button>' +
@@ -1799,27 +2031,27 @@
 
         mount.innerHTML =
           '<div class="panel-form" style="max-width:480px;">' +
-          '<div class="panel-form-head"><span>Weekly schedule</span><button onclick="toggleSchedule()">&#10005;</button></div>' +
-          (rows || '<div style="font-size:12px;color:var(--text-dim);">No classes added yet.</div>') +
+          '<div class="panel-form-head"><span>Weekly Schedule Manager</span><button onclick="toggleSchedule()">&#10005;</button></div>' +
+          (rows || '<div style="font-size:12.5px;color:var(--text-dim);">No classes added yet.</div>') +
           '<div style="border-top:1px solid var(--line-soft); padding-top:12px; display:flex; flex-direction:column; gap:8px;">' +
           '<select class="auth-input" id="newClassSubject">' + subjectOptions + '</select>' +
-          '<div style="display:flex; gap:6px;">' +
-          '<select class="auth-input" id="newClassDay" style="flex:1;">' + dayOptions + '</select>' +
-          '<input class="auth-input" type="time" id="newClassStart" style="flex:1;"/>' +
-          '<input class="auth-input" type="time" id="newClassEnd" style="flex:1;"/>' +
+          '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
+          '<select class="auth-input" id="newClassDay" style="flex:1; min-width:100px;">' + dayOptions + '</select>' +
+          '<input class="auth-input" type="time" id="newClassStart" style="flex:1; min-width:100px;"/>' +
+          '<input class="auth-input" type="time" id="newClassEnd" style="flex:1; min-width:100px;"/>' +
           '</div>' +
-          '<button class="submit-btn" onclick="SCHEDULE.addClass()">Add to schedule</button>' +
+          '<button class="submit-btn" onclick="SCHEDULE.addClass()">Add to Schedule</button>' +
           '</div>' +
           '<div style="border-top:1px solid var(--line-soft); padding-top:12px; display:flex; flex-direction:column; gap:8px;">' +
-          '<span style="font-size:12px; color:var(--text-dim);">Or import from a photo of your timetable</span>' +
-          '<input type="file" id="timetableFile" accept="image/*" onchange="SCHEDULE.uploadTimetable(this.files[0])"/>' +
+          '<span style="font-size:12px; color:var(--text-dim);">Import from timetable photo</span>' +
+          '<input type="file" id="timetableFile" accept="image/*" class="auth-input" onchange="SCHEDULE.uploadTimetable(this.files[0])"/>' +
           '<div id="importDraftMount"></div>' +
           '</div>' +
           '<div style="border-top:1px solid var(--line-soft); padding-top:12px;">' +
           '<div class="toggle-row">' +
           '<div class="toggle-text">' +
           '<span class="t">Push notifications</span>' +
-          '<span class="d">Pings you 5 minutes before each class ends, and again 30 minutes after if you haven\'t marked it. Needs notification permission from your browser.</span>' +
+          '<span class="d">Pings you 5 mins before each class ends, and again 30 mins after to log attendance.</span>' +
           '</div>' +
           '<label class="switch">' +
           '<input type="checkbox" id="pushToggle" ' + (pushEnabled ? 'checked' : '') + ' onchange="PUSH.toggle(this.checked)"/>' +
@@ -1834,9 +2066,9 @@
         var mount = document.getElementById('importDraftMount');
         if (!importDraft || !importDraft.length) { mount.innerHTML = '<div class="auth-msg error">No classes detected. Try a clearer photo.</div>'; return; }
         var rows = importDraft.map(function (r) {
-          return '<div style="font-size:12px; color:var(--text-dim);">' + DAY_NAMES[r.day_of_week] + ' ' + r.start_time + '\u2013' + r.end_time + ' \u00b7 ' + r.subject_name + ' (' + r.type + ')</div>';
+          return '<div style="font-size:12px; color:var(--text-dim); padding:3px 0;">' + DAY_NAMES[r.day_of_week] + ' ' + r.start_time + '\u2013' + r.end_time + ' \u00b7 ' + r.subject_name + ' (' + r.type + ')</div>';
         }).join('');
-        mount.innerHTML = rows + '<button class="submit-btn" onclick="SCHEDULE.confirmImport()">Looks good, add these</button>';
+        mount.innerHTML = rows + '<button class="submit-btn" style="margin-top:6px;" onclick="SCHEDULE.confirmImport()">Confirm & Add Classes</button>';
       }
 
       window.SCHEDULE = {
@@ -1885,7 +2117,7 @@
         uploadTimetable: async function (file) {
           if (!file) return;
           var mount = document.getElementById('importDraftMount');
-          mount.innerHTML = '<span class="spinner"></span> Reading timetable...';
+          mount.innerHTML = '<span class="spinner"></span> Reading timetable photo...';
           var reader = new FileReader();
           reader.onload = async function () {
             var base64 = reader.result.split(',')[1];
@@ -2039,10 +2271,10 @@
         mount.innerHTML =
           '<div class="panel-form" style="max-width:340px;">' +
           '<div class="panel-form-head"><span>' + name + '</span><button onclick="CONFIRM.dismiss()">&#10005;</button></div>' +
-          '<div style="font-size:12px; color:var(--text-dim);">Did this class happen?</div>' +
+          '<div style="font-size:12.5px; color:var(--text-dim);">Did this class happen?</div>' +
           '<div style="display:flex; gap:8px;">' +
-          '<button class="submit-btn" style="background:var(--safe);" onclick="CONFIRM.resolve(\'' + log.id + '\',\'' + log.subject_id + '\',\'present\')">Present</button>' +
-          '<button class="submit-btn" style="background:var(--danger); color:#fff;" onclick="CONFIRM.resolve(\'' + log.id + '\',\'' + log.subject_id + '\',\'absent\')">Absent</button>' +
+          '<button class="submit-btn" style="background:var(--safe); color:#0b0e14; flex:1;" onclick="CONFIRM.resolve(\'' + log.id + '\',\'' + log.subject_id + '\',\'present\')">Present</button>' +
+          '<button class="submit-btn" style="background:var(--danger); color:#ffffff; flex:1;" onclick="CONFIRM.resolve(\'' + log.id + '\',\'' + log.subject_id + '\',\'absent\')">Absent</button>' +
           '</div>' +
           '<button class="ghost-btn" onclick="CONFIRM.resolve(\'' + log.id + '\',\'' + log.subject_id + '\',\'cancelled\')">Class was officially cancelled</button>' +
           '</div>';
@@ -2076,8 +2308,6 @@
           }
         }
       };
-
-      window.toggleAddForm = toggleAddForm;
 
       var topbarEl = document.getElementById('topbar');
       var ticking = false;
