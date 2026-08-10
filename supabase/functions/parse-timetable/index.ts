@@ -54,10 +54,10 @@ Deno.serve(async (req) => {
     }
 
     // Try primary model (gemini-2.0-flash), fallback to gemini-1.5-flash on rate limit
-    let geminiRes = await callGemini(geminiKey, "gemini-2.0-flash", mime_type, image_base64);
+    let geminiRes = await callGemini(geminiKey, "gemini-3.5-flash-lite", mime_type, image_base64);
 
     if (geminiRes.status === 429) {
-      geminiRes = await callGemini(geminiKey, "gemini-1.5-flash", mime_type, image_base64);
+      geminiRes = await callGemini(geminiKey, "gemini-2.5-flash", mime_type, image_base64);
     }
 
     if (!geminiRes.ok) {
