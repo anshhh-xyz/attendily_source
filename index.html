@@ -2805,12 +2805,16 @@
             var newSubject = res.data[0];
             subjects.push(rowToLocal(newSubject));
 
+            var pushWarning = null;
             if (!enableNotif) {
               mutedSubjectIds.push(newSubject.id);
               localStorage.setItem('attendily_muted_subjects', JSON.stringify(mutedSubjectIds));
             } else {
               if ('Notification' in window && Notification.permission !== 'granted') {
-                PUSH.enable();
+                var pushOk = await PUSH.enable();
+                if (!pushOk) {
+                  pushWarning = PUSH.lastError || "Subject added, but notifications couldn't be enabled.";
+                }
               }
             }
 
@@ -2820,7 +2824,11 @@
             var schedRes = await supabase.from('class_schedule').insert(schedRows);
             if (schedRes.error) throw schedRes.error;
 
-            showStatus(null);
+            if (pushWarning) {
+              showStatus(pushWarning, true);
+            } else {
+              showStatus(null);
+            }
           } catch (e) {
             showStatus("Couldn't add subject: " + e.message, true);
           }
@@ -3324,29 +3332,33 @@
         },
 
         enable: async function () {
+          PUSH.lastError = null;
           var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
           var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
           if (isIOS && !isStandalone) {
-            showStatus('On iPhone, notifications only work once this is added to your Home Screen. Tap Share → Add to Home Screen, then open Attendily from that icon and try again.', true);
+            PUSH.lastError = 'On iPhone, notifications only work once this is added to your Home Screen. Tap Share → Add to Home Screen, then open Attendily from that icon and try again.';
+            showStatus(PUSH.lastError, true);
             var input0 = document.getElementById('pushToggle');
             if (input0) input0.checked = false;
             return false;
           }
 
           if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            showStatus('Push notifications are not supported on this browser or device.', true);
+            PUSH.lastError = 'Push notifications are not supported on this browser or device.';
+            showStatus(PUSH.lastError, true);
             return false;
           }
           try {
             var permission = await Notification.requestPermission();
             if (permission !== 'granted') {
-              showStatus('Notification permission was not granted. Check your device/browser notification settings for this site.', true);
+              PUSH.lastError = 'Notification permission was not granted. Check your device/browser notification settings for this site.';
+              showStatus(PUSH.lastError, true);
               return false;
             }
             var reg = await navigator.serviceWorker.register('sw.js', { scope: './' });
             var vapidKey = window.VAPID_PUBLIC_KEY || '';
-            if (!vapidKey) { showStatus('Notifications are not configured yet.', true); return false; }
+            if (!vapidKey) { PUSH.lastError = 'Notifications are not configured yet.'; showStatus(PUSH.lastError, true); return false; }
             var sub = await reg.pushManager.subscribe({
               userVisibleOnly: true,
               applicationServerKey: urlBase64ToUint8Array(vapidKey)
@@ -3359,7 +3371,8 @@
             showStatus('Push notifications enabled.', false);
             return true;
           } catch (e) {
-            showStatus("Couldn't enable notifications: " + e.message, true);
+            PUSH.lastError = "Couldn't enable notifications: " + e.message;
+            showStatus(PUSH.lastError, true);
             return false;
           }
         },
