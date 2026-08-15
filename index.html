@@ -2810,11 +2810,9 @@
               mutedSubjectIds.push(newSubject.id);
               localStorage.setItem('attendily_muted_subjects', JSON.stringify(mutedSubjectIds));
             } else {
-              if ('Notification' in window && Notification.permission !== 'granted') {
-                var pushOk = await PUSH.enable();
-                if (!pushOk) {
-                  pushWarning = PUSH.lastError || "Subject added, but notifications couldn't be enabled.";
-                }
+              var pushOk = await PUSH.enable();
+              if (!pushOk) {
+                pushWarning = PUSH.lastError || "Subject added, but notifications couldn't be enabled.";
               }
             }
 
