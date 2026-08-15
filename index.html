@@ -1466,6 +1466,7 @@
     <div id="confirmOverlayMount"></div>
     <div id="scheduleMount"></div>
     <div id="editModalMount"></div>
+    <div id="deleteModalMount"></div>
 
     <div class="userbar">
       <div class="user-pill">
@@ -2294,110 +2295,7 @@
       }
       window.updateDayCheckStyle = updateDayCheckStyle;
 
-      function slotsForSubject(subjectId) {
-        return schedule.filter(function (c) { return c.subject_id === subjectId; })
-          .sort(function (a, b) { return a.day_of_week - b.day_of_week || a.start_time.localeCompare(b.start_time); });
-      }
 
-      function slotLabel(slot) {
-        return DAY_NAMES[slot.day_of_week] + ' ' + slot.start_time.slice(0, 5) + '\u2013' + slot.end_time.slice(0, 5);
-      }
-
-      function renderMain() {
-        var mount = document.getElementById('mainMount');
-        if (subjects.length === 0) {
-          mount.innerHTML = showAdd ? '' : '<div class="empty">No subjects added yet. Click "+ Add subject to ' + DAY_NAMES[activeDayTab] + '" to start.</div>';
-          return;
-        }
-
-        var cardIndex = 0;
-        var html = '';
-
-        // Show subjects scheduled on activeDayTab
-        var daySlots = validScheduleForDay(activeDayTab).sort(function (a, b) { return a.start_time.localeCompare(b.start_time); });
-
-        if (daySlots.length === 0) {
-          html = '<div class="empty">' +
-            '<div style="font-size:14.5px; font-weight:600; color:var(--text); margin-bottom:4px;">No classes scheduled for ' + DAY_FULL_NAMES[activeDayTab] + '</div>' +
-            '<div style="margin-bottom:14px; font-size:12.5px;">Click below to add a class for this day.</div>' +
-            '<button class="addbtn primary-action" onclick="toggleAddForm(\'day\', ' + activeDayTab + ')">+ Add subject to ' + DAY_NAMES[activeDayTab] + '</button>' +
-            '</div>';
-        } else {
-          html = '<div class="grid">';
-          daySlots.forEach(function (slot) {
-            var s = subjects.find(function (x) { return x.id === slot.subject_id; });
-            if (!s) return;
-            html += cardHTML(s, cardIndex++, slotLabel(slot), slot);
-          });
-          html += '</div>';
-        }
-
-        mount.innerHTML = html;
-      }
-
-      function cardHTML(s, i, slotText, slot) {
-        var r = calc(s.attended, s.missed, s.min);
-        var color = statusColor(r.status);
-        var message;
-        if (r.status === 'empty') message = 'No classes logged yet';
-        else if (r.status === 'impossible') message = s.missed > 0 ? "100% target missed" : "Cannot miss any class";
-        else if (r.status === 'danger') message = 'Attend next ' + r.mustAttend + ' class' + (r.mustAttend !== 1 ? 'es' : '') + ' to reach ' + s.min + '%';
-        else if (r.status === 'warn') message = "On boundary — 0 misses allowed";
-        else message = 'Can afford to miss ' + r.canMiss + ' more';
-
-        var safeName = s.name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        var revealClass = firstRender ? ' reveal' : '';
-        var revealStyle = firstRender ? ' style="animation-delay:' + (i * 35) + 'ms;"' : '';
-
-        var isMuted = mutedSubjectIds.includes(s.id);
-        var notifBtnHTML = '<button class="notif-toggle-btn ' + (isMuted ? '' : 'active') + '" onclick="AT.toggleNotifForSubject(\'' + s.id + '\')">' +
-          (isMuted ? 'Muted' : 'Notify') +
-          '</button>';
-
-        var slots = slotsForSubject(s.id);
-        var whenHTML = '';
-        if (slotText) {
-          whenHTML = '<div style="font-family:\'JetBrains Mono\',monospace; font-size:10.5px; color:var(--primary); margin-top:4px;">' + slotText + '</div>';
-        } else if (slots.length) {
-          whenHTML = '<div style="font-family:\'JetBrains Mono\',monospace; font-size:10.5px; color:var(--text-faint); margin-top:4px;">' + slots.map(slotLabel).join(', ') + '</div>';
-        }
-
-        var editSlotParam = slot ? slot.id : '';
-
-        return (
-          '<div class="card' + revealClass + '"' + revealStyle + '>' +
-          '<div class="card-top-actions">' +
-          '<button class="card-action-btn edit-btn" onclick="AT.openEditModal(\'' + editSlotParam + '\', \'' + s.id + '\')" title="Edit Class Details">' +
-          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
-          '</button>' +
-          '<button class="card-action-btn remove-btn" onclick="AT.removeSubject(\'' + s.id + '\')" title="Remove Subject">&#10005;</button>' +
-          '</div>' +
-          '<div class="card-head">' +
-          ringWithLabel(r.pct, s.min, 68, 5, false) +
-          '<div style="min-width:0; flex:1;">' +
-          '<div class="card-name">' + safeName + '</div>' +
-          '<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:3px;">' +
-          '<span class="tag ' + s.type + '">' + s.type + '</span>' +
-          notifBtnHTML +
-          '</div>' +
-          whenHTML +
-          '</div>' +
-          '</div>' +
-          '<div class="steppers">' +
-          stepperHTML(s.id, 'attended', 'Present', s.attended, 'var(--safe)') +
-          stepperHTML(s.id, 'missed', 'Absent', s.missed, 'var(--danger)') +
-          '</div>' +
-          '<div class="minrow">' +
-          '<span class="lbl">Min required</span>' +
-          '<div class="mininput-wrap">' +
-          '<input class="mininput" type="number" min="0" max="100" value="' + s.min + '" onchange="AT.setMin(\'' + s.id + '\', this.value)"/>' +
-          '<span class="pct-sign">%</span>' +
-          '</div>' +
-          '</div>' +
-          '<div class="message" style="color:' + color + ';">' + message + '</div>' +
-          '</div>'
-        );
-      }
 
       function initMagicBentoSpotlight() {
         var bentoGrid = document.querySelector('.magic-bento-grid');
@@ -2646,7 +2544,7 @@
           '<button class="card-action-btn edit-btn" onclick="AT.openEditModal(\'' + editSlotParam + '\', \'' + s.id + '\')" title="Edit Class Details">' +
           '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
           '</button>' +
-          '<button class="card-action-btn remove-btn" onclick="AT.removeSubject(\'' + s.id + '\')" title="Remove Subject">&#10005;</button>' +
+          '<button class="card-action-btn remove-btn" onclick="AT.promptRemoveClassSlot(\'' + (slot ? slot.id : '') + '\', \'' + s.id + '\')" title="Remove Class Slot / Subject">&#10005;</button>' +
           '</div>' +
           '<div class="card-head">' +
           ringWithLabel(r.pct, s.min, 68, 5, false) +
@@ -2689,6 +2587,69 @@
       }
 
       window.AT = {
+        promptRemoveClassSlot: function (slotId, subjectId) {
+          var s = subjects.find(function (x) { return x.id === subjectId; });
+          if (!s) return;
+          var slot = schedule.find(function (x) { return x.id === slotId; });
+          var subSlots = slotsForSubject(subjectId);
+          var mount = document.getElementById('deleteModalMount');
+          if (!mount) return;
+
+          var dayName = slot ? DAY_FULL_NAMES[slot.day_of_week] : DAY_FULL_NAMES[activeDayTab];
+          var safeName = s.name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+          var isMultipleDays = subSlots.length > 1;
+          var otherSlotsText = '';
+          if (isMultipleDays) {
+            var otherSlots = subSlots.filter(function (x) { return !slot || x.id !== slot.id; });
+            otherSlotsText = '<div style="font-size:11.5px; color:var(--text-dim); margin-top:8px; line-height:1.4; background:var(--panel-2); padding:8px 10px; border:1px solid var(--line);">' +
+              '<span style="color:var(--text); font-weight:500;">Other scheduled days for this subject:</span><br/>' +
+              otherSlots.map(slotLabel).join(', ') +
+              '</div>';
+          }
+
+          mount.innerHTML =
+            '<div class="modal-overlay" onclick="if(event.target===this) AT.closeDeleteModal()">' +
+            '<div class="modal-card" style="max-width:440px;">' +
+            '<div class="panel-form-head"><span style="color:var(--pink);">Remove Class</span><button onclick="AT.closeDeleteModal()">&#10005;</button></div>' +
+            '<div style="margin-top:8px; font-size:13px; color:var(--text); line-height:1.45;">' +
+            (isMultipleDays
+              ? 'How would you like to remove <b>' + safeName + '</b>?'
+              : 'Are you sure you want to remove <b>' + safeName + '</b> from ' + dayName + '?') +
+            '</div>' +
+            otherSlotsText +
+            '<div style="display:flex; flex-direction:column; gap:8px; margin-top:16px;">' +
+            (slotId
+              ? '<button class="submit-btn" style="margin-top:0; padding:10px;" onclick="AT.removeClassSlot(\'' + slotId + '\')">' +
+                (isMultipleDays ? 'Remove from ' + dayName + ' Only' : 'Remove Class from ' + dayName) +
+                '</button>'
+              : '') +
+            '<button class="ghost-btn danger" style="padding:10px; font-weight:500;" onclick="AT.removeSubject(\'' + subjectId + '\')">' +
+            (isMultipleDays ? 'Delete Subject Completely (All Days)' : 'Delete Subject & History') +
+            '</button>' +
+            '<button class="ghost-btn" style="padding:8px;" onclick="AT.closeDeleteModal()">Cancel</button>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
+        },
+
+        closeDeleteModal: function () {
+          var mount = document.getElementById('deleteModalMount');
+          if (mount) mount.innerHTML = '';
+        },
+
+        removeClassSlot: async function (slotId) {
+          AT.closeDeleteModal();
+          try {
+            var res = await supabase.from('class_schedule').delete().eq('id', slotId);
+            if (res.error) throw res.error;
+            showStatus('Class removed from ' + DAY_FULL_NAMES[activeDayTab] + '.', false);
+            await loadSchedule();
+          } catch (e) {
+            showStatus("Couldn't remove class slot: " + e.message, true);
+          }
+        },
+
         setType: function (t) { addFormType = t; renderAddForm(); },
         closeAdd: function () { showAdd = false; render(); },
 
@@ -2840,6 +2801,7 @@
         },
 
         removeSubject: async function (id) {
+          AT.closeDeleteModal();
           var prev = subjects;
           subjects = subjects.filter(function (s) { return s.id !== id; });
           render();
@@ -3079,21 +3041,82 @@
 
       function renderImportDraft() {
         var mount = document.getElementById('importDraftMount');
-        if (!importDraft || !importDraft.length) { mount.innerHTML = '<div class="auth-msg error" style="margin-top:12px;">No classes detected in photo. Try a clearer image.</div>'; return; }
-        var rows = importDraft.map(function (r) {
-          return '<div style="font-size:12px; color:var(--text); padding:6px 10px; background:var(--panel-2); border:1px solid var(--line); margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">' +
-            '<span>' + DAY_NAMES[r.day_of_week] + ' ' + r.start_time + '\u2013' + r.end_time + '</span>' +
-            '<span style="font-weight:500; color:var(--primary);">' + r.subject_name + ' (' + r.type + ')</span>' +
+        if (!importDraft || !importDraft.length) {
+          mount.innerHTML = '<div style="margin-top:12px; background:var(--panel-2); border:1px solid var(--line); padding:14px; text-align:center; color:var(--text-dim); font-size:12px;">' +
+            'No classes remaining in list. Drop another photo above or click browse.' +
+            '</div>';
+          return;
+        }
+
+        // Aggregate unique subjects for quick removal
+        var subjectMap = {};
+        importDraft.forEach(function (r) {
+          var name = (r.subject_name || '').trim();
+          if (!name) return;
+          subjectMap[name] = (subjectMap[name] || 0) + 1;
+        });
+        var uniqueNames = Object.keys(subjectMap);
+
+        var subjectPillsHtml = '';
+        if (uniqueNames.length > 0) {
+          var pills = uniqueNames.map(function (name) {
+            var count = subjectMap[name];
+            var encodedName = encodeURIComponent(name);
+            return '<span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; background:var(--panel-2); border:1px solid var(--line); padding:3px 8px; border-radius:12px; color:var(--text);">' +
+              '<span style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + name + '</span>' +
+              '<span style="font-size:10px; color:var(--text-faint);">(' + count + ')</span>' +
+              '<button type="button" onclick="SCHEDULE.removeDraftSubject(decodeURIComponent(\'' + encodedName + '\'))" title="Remove all ' + name.replace(/'/g, "\'") + ' classes" style="background:transparent; border:none; color:var(--text-dim); cursor:pointer; font-size:12px; padding:0 2px; line-height:1; display:inline-flex; align-items:center;" onmouseover="this.style.color=\'var(--pink)\'" onmouseout="this.style.color=\'var(--text-dim)\'">&#10005;</button>' +
+              '</span>';
+          }).join(' ');
+
+          subjectPillsHtml =
+            '<div style="margin-bottom:10px; background:var(--panel); border:1px solid var(--line); padding:8px 10px; border-radius:6px;">' +
+            '<div style="font-size:11px; font-weight:600; color:var(--text-dim); margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">' +
+            '<span>Detected Subjects (' + uniqueNames.length + ') &mdash; Tap &#10005; to exclude</span>' +
+            '</div>' +
+            '<div style="display:flex; flex-wrap:wrap; gap:5px; max-height:75px; overflow-y:auto;">' + pills + '</div>' +
+            '</div>';
+        }
+
+        var rows = importDraft.map(function (r, idx) {
+          return '<div style="font-size:12px; color:var(--text); padding:6px 10px; background:var(--panel-2); border:1px solid var(--line); margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; gap:8px;">' +
+            '<span style="white-space:nowrap; color:var(--text-dim); font-size:11.5px;">' + DAY_NAMES[r.day_of_week] + ' ' + r.start_time + '\u2013' + r.end_time + '</span>' +
+            '<div style="display:flex; align-items:center; gap:8px; overflow:hidden; justify-content:flex-end;">' +
+            '<span style="font-weight:500; color:var(--primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:right;">' + r.subject_name + ' <span style="font-size:10.5px; opacity:0.8;">(' + r.type + ')</span></span>' +
+            '<button type="button" onclick="SCHEDULE.removeDraftItem(' + idx + ')" title="Remove this slot" style="background:transparent; border:none; color:var(--text-faint); cursor:pointer; font-size:12px; padding:2px 6px; border-radius:4px; line-height:1; flex-shrink:0; transition:all 0.15s ease;" onmouseover="this.style.color=\'var(--pink)\';this.style.background=\'rgba(255,100,100,0.15)\'" onmouseout="this.style.color=\'var(--text-faint)\';this.style.background=\'transparent\'"><span style="font-size:11px;">&#10005;</span></button>' +
+            '</div>' +
             '</div>';
         }).join('');
+
         mount.innerHTML = '<div style="margin-top:14px;">' +
-          '<div style="font-size:12px; font-weight:500; color:var(--text-dim); margin-bottom:6px;">Detected Classes (' + importDraft.length + '):</div>' +
-          '<div style="max-height:40vh; overflow-y:auto;">' + rows + '</div>' +
-          '<button class="submit-btn" style="margin-top:10px; width:100%; position:sticky; bottom:-22px; box-shadow:0 -12px 16px -4px #111114;" onclick="SCHEDULE.confirmImport()">Confirm & Add All Classes To Day Tabs</button>' +
+          subjectPillsHtml +
+          '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
+          '<div style="font-size:12px; font-weight:500; color:var(--text-dim);">Detected Classes (' + importDraft.length + '):</div>' +
+          '<button type="button" onclick="SCHEDULE.clearDraft()" style="background:none; border:none; color:var(--pink); font-size:11px; cursor:pointer; padding:0;" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'">Clear All</button>' +
+          '</div>' +
+          '<div style="max-height:36vh; overflow-y:auto;">' + rows + '</div>' +
+          '<button class="submit-btn" style="margin-top:10px; width:100%; position:sticky; bottom:-22px; box-shadow:0 -12px 16px -4px #111114;" onclick="SCHEDULE.confirmImport()">Confirm & Add ' + importDraft.length + ' Class' + (importDraft.length === 1 ? '' : 'es') + ' To Day Tabs</button>' +
           '</div>';
       }
 
       window.SCHEDULE = {
+        removeDraftItem: function (idx) {
+          if (!importDraft || typeof idx !== 'number') return;
+          importDraft.splice(idx, 1);
+          renderImportDraft();
+        },
+        removeDraftSubject: function (subjectName) {
+          if (!importDraft || !subjectName) return;
+          var target = subjectName.toLowerCase().trim();
+          importDraft = importDraft.filter(function (r) {
+            return (r.subject_name || '').toLowerCase().trim() !== target;
+          });
+          renderImportDraft();
+        },
+        clearDraft: function () {
+          importDraft = [];
+          renderImportDraft();
+        },
         addClass: async function () {
           var subjectId = document.getElementById('newClassSubject').value;
           var day = parseInt(document.getElementById('newClassDay').value, 10);
@@ -3139,7 +3162,7 @@
         uploadTimetable: async function (file, customKey) {
           if (!file) return;
           var mount = document.getElementById('importDraftMount');
-          mount.innerHTML = '<div style="padding:14px; text-align:center;"><span class="spinner"></span> Parsing timetable</div>';
+          mount.innerHTML = '<div style="padding:14px; text-align:center;"><span class="spinner"></span> Parsing timetable photo with Gemini AI...</div>';
           var reader = new FileReader();
           reader.onload = async function () {
             var base64 = reader.result.split(',')[1];
