@@ -1271,6 +1271,8 @@
     .modal-card {
       width: 100%;
       max-width: 460px;
+      max-height: 85vh;
+      overflow-y: auto;
       background: #111114;
       border: 1px solid var(--line);
       padding: 22px;
@@ -3086,8 +3088,8 @@
         }).join('');
         mount.innerHTML = '<div style="margin-top:14px;">' +
           '<div style="font-size:12px; font-weight:500; color:var(--text-dim); margin-bottom:6px;">Detected Classes (' + importDraft.length + '):</div>' +
-          rows +
-          '<button class="submit-btn" style="margin-top:10px; width:100%;" onclick="SCHEDULE.confirmImport()">Confirm & Add All Classes To Day Tabs</button>' +
+          '<div style="max-height:40vh; overflow-y:auto;">' + rows + '</div>' +
+          '<button class="submit-btn" style="margin-top:10px; width:100%; position:sticky; bottom:-22px; box-shadow:0 -12px 16px -4px #111114;" onclick="SCHEDULE.confirmImport()">Confirm & Add All Classes To Day Tabs</button>' +
           '</div>';
       }
 
