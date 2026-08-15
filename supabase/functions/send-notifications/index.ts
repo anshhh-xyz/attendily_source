@@ -32,6 +32,7 @@ function timeToMinutes(t: string) {
 
 async function pushToUser(userId: string, payload: Record<string, unknown>) {
   const { data: tokens } = await supabase.from("push_tokens").select("*").eq("user_id", userId);
+  console.log(`pushToUser ${userId}: found ${tokens?.length ?? 0} token(s)`);
   if (!tokens) return;
   for (const t of tokens) {
     const subscription = {
@@ -40,7 +41,9 @@ async function pushToUser(userId: string, payload: Record<string, unknown>) {
     };
     try {
       await webpush.sendNotification(subscription, JSON.stringify(payload));
+      console.log(`push sent OK to token ${t.id}`);
     } catch (e) {
+      console.log(`push FAILED for token ${t.id}: status=${e.statusCode} message=${e.message}`);
       if (e.statusCode === 404 || e.statusCode === 410) {
         await supabase.from("push_tokens").delete().eq("id", t.id);
       }
@@ -50,14 +53,19 @@ async function pushToUser(userId: string, payload: Record<string, unknown>) {
 
 Deno.serve(async () => {
   const { date, minutes, dayOfWeek } = nowInKolkata();
+  console.log(`run at ${date} minutes=${minutes} dayOfWeek=${dayOfWeek}`);
 
-  const { data: upcoming } = await supabase
+  const { data: upcoming, error: upcomingErr } = await supabase
     .from("class_schedule")
     .select("id, user_id, subject_id, start_time, end_time, subjects(name, type)")
     .eq("day_of_week", dayOfWeek);
 
+  if (upcomingErr) console.log(`class_schedule query error: ${upcomingErr.message}`);
+  console.log(`found ${upcoming?.length ?? 0} class_schedule row(s) for today`);
+
   for (const cls of upcoming ?? []) {
     const endMin = timeToMinutes(cls.end_time);
+    console.log(`checking schedule ${cls.id}: end=${cls.end_time} (${endMin}min) vs now=${minutes}min, diff=${endMin - minutes}`);
     if (endMin - minutes !== 5) continue;
 
     const { data: existing } = await supabase
@@ -67,9 +75,9 @@ Deno.serve(async () => {
       .eq("class_date", date)
       .maybeSingle();
 
-    if (existing) continue;
+    if (existing) { console.log(`already logged for ${cls.id} today, skipping`); continue; }
 
-    const { data: log } = await supabase
+    const { data: log, error: insertErr } = await supabase
       .from("class_log")
       .insert({
         user_id: cls.user_id,
@@ -81,7 +89,10 @@ Deno.serve(async () => {
       .select()
       .single();
 
+    if (insertErr) console.log(`class_log insert error: ${insertErr.message}`);
+
     if (log) {
+      console.log(`matched! sending push for schedule ${cls.id} to user ${cls.user_id}`);
       await pushToUser(cls.user_id, {
         title: (cls as any).subjects?.name ?? "Class ending soon",
         body: "Ends in 5 minutes. Tap to mark your attendance.",
@@ -96,11 +107,14 @@ Deno.serve(async () => {
     .eq("status", "pending")
     .eq("final_reminder_sent", false);
 
+  console.log(`found ${pending?.length ?? 0} pending reminder candidate(s)`);
+
   for (const log of pending ?? []) {
     if (log.class_date !== date) continue;
     const endMin = timeToMinutes((log as any).class_schedule?.end_time ?? "23:59");
     if (minutes - endMin < 30) continue;
 
+    console.log(`sending final reminder for class_log ${log.id}`);
     await pushToUser(log.user_id, {
       title: (log as any).subjects?.name ?? "Unmarked class",
       body: "Still unmarked — tap to record attendance.",
