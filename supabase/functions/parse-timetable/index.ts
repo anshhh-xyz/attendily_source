@@ -9,7 +9,8 @@ Return ONLY a JSON array, no prose, no markdown fences. Each item must look like
 If a cell spans a lab block, mark type as "lab". If you cannot read a cell confidently, skip it rather than guessing.`;
 
 async function callGemini(apiKey: string, model: string, mimeType: string, base64Data: string) {
-  return await fetch(
+  console.log(`calling model: ${model}`);
+  const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
       method: "POST",
@@ -25,6 +26,8 @@ async function callGemini(apiKey: string, model: string, mimeType: string, base6
       })
     }
   );
+  console.log(`model ${model} responded with status ${res.status}`);
+  return res;
 }
 
 Deno.serve(async (req) => {
@@ -53,7 +56,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Try primary model (gemini-3.5-flash-lite), fallback to gemini-2.5-flash on rate limit
     let geminiRes = await callGemini(geminiKey, "gemini-3.5-flash-lite", mime_type, image_base64);
 
     if (geminiRes.status === 429) {
@@ -62,6 +64,7 @@ Deno.serve(async (req) => {
 
     if (!geminiRes.ok) {
       const errText = await geminiRes.text();
+      console.log(`final error body: ${errText}`);
       let msg = "Gemini API request failed.";
       try {
         const parsedErr = JSON.parse(errText);
