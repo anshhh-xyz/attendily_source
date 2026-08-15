@@ -1131,18 +1131,23 @@
       color: var(--text);
     }
 
-    .panel-form input[type=text] {
+    .panel-form input[type=text],
+    .modal-card input[type=text],
+    input[type=text] {
       background: var(--panel-2);
       border: 1px solid var(--line);
       color: var(--text);
       font-size: 13px;
       font-weight: 400;
-      padding: 10px;
+      padding: 10px 12px;
       width: 100%;
+      outline: none;
       transition: border-color .15s ease;
     }
 
-    .panel-form input[type=text]:focus {
+    .panel-form input[type=text]:focus,
+    .modal-card input[type=text]:focus,
+    input[type=text]:focus {
       border-color: var(--pink);
     }
 
