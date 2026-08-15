@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Try primary model (gemini-2.0-flash), fallback to gemini-1.5-flash on rate limit
+    // Try primary model (gemini-3.5-flash-lite), fallback to gemini-2.5-flash on rate limit
     let geminiRes = await callGemini(geminiKey, "gemini-3.5-flash-lite", mime_type, image_base64);
 
     if (geminiRes.status === 429) {
