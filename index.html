@@ -3162,7 +3162,7 @@
         uploadTimetable: async function (file, customKey) {
           if (!file) return;
           var mount = document.getElementById('importDraftMount');
-          mount.innerHTML = '<div style="padding:14px; text-align:center;"><span class="spinner"></span> Parsing timetable photo with Gemini AI...</div>';
+          mount.innerHTML = '<div style="padding:14px; text-align:center;"><span class="spinner"></span> Parsing timetable...</div>';
           var reader = new FileReader();
           reader.onload = async function () {
             var base64 = reader.result.split(',')[1];
