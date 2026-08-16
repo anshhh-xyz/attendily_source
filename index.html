@@ -1515,6 +1515,7 @@
 
       var subjects = [];
       var schedule = [];
+      var slotCounts = JSON.parse(localStorage.getItem('attendily_slot_counts') || '{}');
       var loaded = false;
       var showAdd = false;
       var addFormMode = 'global'; // 'global' or 'day'
@@ -1842,6 +1843,75 @@
         return { id: r.id, name: r.name, type: r.type, min: r.min_attendance, attended: r.attended, missed: r.missed };
       }
 
+      
+      function saveSlotCounts() {
+        localStorage.setItem('attendily_slot_counts', JSON.stringify(slotCounts));
+      }
+
+      function getSlotCounts(slotId) {
+        if (!slotId) return null;
+        if (!slotCounts[slotId]) {
+          slotCounts[slotId] = { attended: 0, missed: 0 };
+        }
+        return slotCounts[slotId];
+      }
+
+      function syncSubjectAttendanceFromSlots(subjectId) {
+        var s = subjects.find(function (x) { return x.id === subjectId; });
+        if (!s) return;
+        var sSlots = slotsForSubject(subjectId);
+        if (sSlots.length > 0) {
+          var totalAtt = 0;
+          var totalMiss = 0;
+          sSlots.forEach(function (slot) {
+            var counts = getSlotCounts(slot.id);
+            totalAtt += (counts.attended || 0);
+            totalMiss += (counts.missed || 0);
+          });
+          s.attended = totalAtt;
+          s.missed = totalMiss;
+        }
+      }
+
+      function initializeSlotCountsForSubjects() {
+        subjects.forEach(function (s) {
+          var sSlots = slotsForSubject(s.id);
+          if (sSlots.length === 0) return;
+
+          // Check if any slot has existing counts
+          var hasExisting = sSlots.some(function (slot) { return !!slotCounts[slot.id]; });
+
+          if (!hasExisting) {
+            // First time setup: distribute existing subject attendance cleanly
+            if (sSlots.length === 1) {
+              slotCounts[sSlots[0].id] = { attended: s.attended || 0, missed: s.missed || 0 };
+            } else {
+              var baseAtt = Math.floor((s.attended || 0) / sSlots.length);
+              var remAtt = (s.attended || 0) % sSlots.length;
+              var baseMiss = Math.floor((s.missed || 0) / sSlots.length);
+              var remMiss = (s.missed || 0) % sSlots.length;
+
+              sSlots.forEach(function (slot, idx) {
+                slotCounts[slot.id] = {
+                  attended: baseAtt + (idx < remAtt ? 1 : 0),
+                  missed: baseMiss + (idx < remMiss ? 1 : 0)
+                };
+              });
+            }
+          } else {
+            // Ensure all slots exist in slotCounts
+            sSlots.forEach(function (slot) {
+              if (!slotCounts[slot.id]) {
+                slotCounts[slot.id] = { attended: 0, missed: 0 };
+              }
+            });
+            // Keep subject totals in sync with sum of slots
+            syncSubjectAttendanceFromSlots(s.id);
+          }
+        });
+        saveSlotCounts();
+      }
+
       async function loadData() {
         try {
           var res = await supabase.from('subjects').select('*').order('created_at', { ascending: true });
@@ -1858,6 +1928,7 @@
         } catch (e) {
           schedule = [];
         }
+        initializeSlotCountsForSubjects();
         loaded = true;
         render();
       }
@@ -2543,6 +2614,14 @@
 
         var editSlotParam = slot ? slot.id : '';
 
+        var slotId = slot ? slot.id : '';
+        var slotCountsData = slotId ? getSlotCounts(slotId) : null;
+        var displayAttended = slotCountsData ? slotCountsData.attended : s.attended;
+        var displayMissed = slotCountsData ? slotCountsData.missed : s.missed;
+
+        var dayName = slot ? DAY_NAMES[slot.day_of_week] : DAY_NAMES[activeDayTab];
+        var dayLabelSuffix = slots.length > 1 ? ' (' + dayName + ')' : '';
+
         return (
           '<div class="card' + revealClass + '"' + revealStyle + '>' +
           '<div class="card-top-actions">' +
@@ -2563,8 +2642,8 @@
           '</div>' +
           '</div>' +
           '<div class="steppers">' +
-          stepperHTML(s.id, 'attended', 'Present', s.attended, 'var(--safe)') +
-          stepperHTML(s.id, 'missed', 'Absent', s.missed, 'var(--danger)') +
+          stepperHTML(s.id, 'attended', 'Present' + dayLabelSuffix, displayAttended, 'var(--safe)', slotId) +
+          stepperHTML(s.id, 'missed', 'Absent' + dayLabelSuffix, displayMissed, 'var(--danger)', slotId) +
           '</div>' +
           '<div class="minrow">' +
           '<span class="lbl">Min required</span>' +
@@ -2578,14 +2657,15 @@
         );
       }
 
-      function stepperHTML(id, field, label, value, tint) {
+      function stepperHTML(id, field, label, value, tint, slotId) {
+        var slotParam = slotId ? ", '" + slotId + "'" : "";
         return (
           '<div class="stepper">' +
           '<span class="label">' + label + '</span>' +
           '<div class="controls">' +
-          '<button class="stepbtn" onclick="AT.step(\'' + id + '\',\'' + field + '\',-1)" aria-label="decrease ' + label + '">&#8722;</button>' +
+          '<button class="stepbtn" onclick="AT.step(\'' + id + '\',\'' + field + '\',-1' + slotParam + ')" aria-label="decrease ' + label + '">&#8722;</button>' +
           '<span class="stepval bump" style="color:' + tint + ';">' + value + '</span>' +
-          '<button class="stepbtn" onclick="AT.step(\'' + id + '\',\'' + field + '\',1)" aria-label="increase ' + label + '">&#43;</button>' +
+          '<button class="stepbtn" onclick="AT.step(\'' + id + '\',\'' + field + '\',1' + slotParam + ')" aria-label="increase ' + label + '">&#43;</button>' +
           '</div>' +
           '</div>'
         );
@@ -2648,8 +2728,13 @@
           try {
             var res = await supabase.from('class_schedule').delete().eq('id', slotId);
             if (res.error) throw res.error;
+            if (slotCounts[slotId]) {
+              delete slotCounts[slotId];
+              saveSlotCounts();
+            }
             showStatus('Class removed from ' + DAY_FULL_NAMES[activeDayTab] + '.', false);
             await loadSchedule();
+            initializeSlotCountsForSubjects();
           } catch (e) {
             showStatus("Couldn't remove class slot: " + e.message, true);
           }
@@ -2807,6 +2892,11 @@
 
         removeSubject: async function (id) {
           AT.closeDeleteModal();
+          var sSlots = slotsForSubject(id);
+          sSlots.forEach(function (slot) {
+            if (slotCounts[slot.id]) delete slotCounts[slot.id];
+          });
+          saveSlotCounts();
           var prev = subjects;
           subjects = subjects.filter(function (s) { return s.id !== id; });
           render();
@@ -2821,20 +2911,41 @@
           }
         },
 
-        step: async function (id, field, delta) {
+        step: async function (id, field, delta, slotId) {
           var s = subjects.find(function (x) { return x.id === id; });
           if (!s) return;
-          var prevVal = s[field];
-          s[field] = Math.max(0, s[field] + delta);
+          var prevSubjectVal = s[field];
+
+          if (slotId) {
+            var counts = getSlotCounts(slotId);
+            var prevSlotVal = counts[field] || 0;
+            counts[field] = Math.max(0, prevSlotVal + delta);
+            saveSlotCounts();
+            syncSubjectAttendanceFromSlots(id);
+          } else {
+            s[field] = Math.max(0, s[field] + delta);
+          }
+
           render();
-          var patch = {};
-          patch[field] = s[field];
+
+          var patch = {
+            attended: s.attended,
+            missed: s.missed
+          };
+
           try {
             var res = await supabase.from('subjects').update(patch).eq('id', id);
             if (res.error) throw res.error;
             showStatus(null);
           } catch (e) {
-            s[field] = prevVal;
+            if (slotId) {
+              var c = getSlotCounts(slotId);
+              c[field] = prevSlotVal;
+              saveSlotCounts();
+              syncSubjectAttendanceFromSlots(id);
+            } else {
+              s[field] = prevSubjectVal;
+            }
             showStatus("Couldn't save change: " + e.message, true);
             render();
           }
@@ -3462,13 +3573,21 @@
             if (res.error) throw res.error;
             if (status === 'present' || status === 'absent') {
               var field = status === 'present' ? 'attended' : 'missed';
-              var s = subjects.find(function (x) { return x.id === subjectId; });
-              var newVal = (s ? s[field] : 0) + 1;
-              var patch = {};
-              patch[field] = newVal;
-              var updateRes = await supabase.from('subjects').update(patch).eq('id', subjectId);
-              if (updateRes.error) throw updateRes.error;
-              if (s) { s[field] = newVal; render(); }
+              if (log.schedule_id) {
+                var counts = getSlotCounts(log.schedule_id);
+                counts[field] = (counts[field] || 0) + 1;
+                saveSlotCounts();
+                syncSubjectAttendanceFromSlots(subjectId);
+              } else {
+                var s = subjects.find(function (x) { return x.id === subjectId; });
+                if (s) s[field] = (s[field] || 0) + 1;
+              }
+              var sub = subjects.find(function (x) { return x.id === subjectId; });
+              if (sub) {
+                var updateRes = await supabase.from('subjects').update({ attended: sub.attended, missed: sub.missed }).eq('id', subjectId);
+                if (updateRes.error) throw updateRes.error;
+                render();
+              }
             }
             CONFIRM.dismiss();
             showStatus('Marked as ' + status + '.', false);
@@ -3481,6 +3600,7 @@
         }
       };
 
+      window.addEventListener('resize', function () { updatePillNavIndicator(); });
       var topbarEl = document.getElementById('topbar');
       var ticking = false;
       window.addEventListener('scroll', function () {
