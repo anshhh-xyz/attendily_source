@@ -13,27 +13,47 @@ function buildPrompt(groupPreference?: string): string {
                       `"${groupPreference}"`;
 
     groupInstruction = `
-- TARGET STUDENT GROUP: ${groupName}
+- TARGET STUDENT: ${groupName}
 
-- WEEKLY LAB ROTATION & GROUP MAPPING RULES:
-  1. EACH LAB SUBJECT OCCURS ONLY ONCE PER WEEK: In college timetables, each practical lab course (e.g. "Computational Methods Lab", "Data Structures Lab", "OOP Lab", "Digital Logic Lab") is attended by a student group EXACTLY ONCE per week.
-  2. ROTATION ACROSS DAYS: Different groups take the same lab on different days of the week.
-     - Example: If "Computational Methods Lab" appears on Monday (for Group 1), on Thursday (for Group 3), and on Friday (for Group 2):
-       * For Group 1: Parse it ONLY on Monday. Do NOT parse it on Thursday or Friday (Friday is a free period / off for Group 1).
-       * For Group 2: Parse it ONLY on Friday. Do NOT parse it on Monday or Thursday.
-       * For Group 3: Parse it ONLY on Thursday. Do NOT parse it on Monday or Friday.
-  3. PARTIALLY FILLED CELLS: If a cell only lists 2 groups (e.g. Group 2 and Group 3), and the student is in Group 1, Group 1 has NO class during that slot — do NOT pick either row for Group 1.
-  4. NO DUPLICATE LABS IN A WEEK: Never output the same lab subject on multiple days for the same student group.`;
+CRITICAL LAB ROTATION & DEDUPLICATION ALGORITHM:
+1. STRICT ONCE-PER-WEEK RULE: A student attends each lab subject (e.g. "Data Structures Lab", "Computational Methods Lab", "OOP Lab", "Digital Logic Lab") EXACTLY ONCE per week. NEVER output the same lab subject on two different days.
+2. ROTATION MAPPING:
+   - If Group 1 has "Computational Methods Lab" on Monday (1:40-3:20), and "Data Structures Lab" on Tuesday (11:30-1:10), then on Friday (9:50-11:30) the cell contains Group 2 and Group 3's labs. Group 1 has NO lab on Friday! LEAVE FRIDAY 9:50-11:30 EMPTY for Group 1.
+   - If a cell contains labs for other groups (e.g. Group 2 or Group 3), and the target student has already taken or will take that lab on another day, DO NOT output any lab for that cell.
+3. OUTPUT ONLY 1 INSTANCE PER LAB COURSE: The final JSON must have at most ONE entry for each unique lab course in the entire week.`;
   }
 
-  return `You are an expert college timetable analyzer reading a schedule image. Parse every class slot for the target student.
-Return ONLY a valid JSON array, no prose, no markdown fences. Each item must look like:
+  return `You are an expert college timetable analyzer. Parse all classes for the target student.
+Return ONLY a valid JSON array, no markdown fences, no explanatory text. Each item must look like:
 {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 1-6 (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}
-If a cell spans a lab block (usually 2 or 3 hours/periods), mark type as "lab". If you cannot read a cell confidently, skip it rather than guessing.
 
 CRITICAL RULES:
-1. FULL-CLASS COMMON LECTURES: Regular theory lectures (e.g. Discrete Mathematics, Digital Logic theory) where the entire section attends together MUST be parsed on all days they appear.
-2. FREE PERIODS & EMPTY SLOTS: When a student's group has no lab on a given day/slot, leave that slot completely empty. Never assign another group's lab to this student.${groupInstruction}`;
+1. THEORY LECTURES: Regular full-class theory lectures must be parsed on all days they appear.
+2. LAB CONSTRAINTS:${groupInstruction}`;
+}
+
+function deduplicateLabsForGroup(classes: any[]): any[] {
+  if (!Array.isArray(classes)) return [];
+  const seenLabs = new Set<string>();
+  const filtered: any[] = [];
+
+  for (const item of classes) {
+    if (!item || !item.subject_name) continue;
+    const isLab = (item.type || '').toLowerCase() === 'lab' || item.subject_name.toLowerCase().includes('lab');
+    
+    if (isLab) {
+      // Normalize lab name (e.g. "data structures lab", "computational methods lab")
+      const normName = item.subject_name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (seenLabs.has(normName)) {
+        // Skip duplicate lab occurring on another day in the same week
+        console.log(`Skipping duplicate lab in week: ${item.subject_name} on day ${item.day_of_week}`);
+        continue;
+      }
+      seenLabs.add(normName);
+    }
+    filtered.push(item);
+  }
+  return filtered;
 }
 
 async function callGemini(apiKey: string, model: string, mimeType: string, base64Data: string, promptText: string) {
@@ -83,7 +103,6 @@ Deno.serve(async (req) => {
 
     if (!geminiRes.ok) {
       const errText = await geminiRes.text();
-      console.log(`final error body: ${errText}`);
       let msg = "Gemini API request failed.";
       try {
         const parsedErr = JSON.parse(errText);
@@ -105,7 +124,12 @@ Deno.serve(async (req) => {
     const data = await geminiRes.json();
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
     const cleaned = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
-    const parsed = JSON.parse(cleaned);
+    let parsed = JSON.parse(cleaned);
+
+    // Apply strict deduplication if group preference is selected
+    if (group_preference && group_preference !== "all") {
+      parsed = deduplicateLabsForGroup(parsed);
+    }
 
     return new Response(
       JSON.stringify({ classes: parsed }),

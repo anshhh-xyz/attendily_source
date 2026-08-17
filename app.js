@@ -1984,6 +1984,20 @@
                 return;
               }
 
+              // If group selected, guarantee each lab subject appears at most once per week
+              if (groupPref && groupPref !== 'all' && Array.isArray(data.classes)) {
+                var seenLabs = {};
+                data.classes = data.classes.filter(function (item) {
+                  if (!item || !item.subject_name) return false;
+                  var isLab = (item.type || '').toLowerCase() === 'lab' || item.subject_name.toLowerCase().indexOf('lab') !== -1;
+                  if (isLab) {
+                    var norm = item.subject_name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    if (seenLabs[norm]) return false;
+                    seenLabs[norm] = true;
+                  }
+                  return true;
+                });
+              }
               importDraft = data.classes;
               renderImportDraft();
             } catch (e) {
