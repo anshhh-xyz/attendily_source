@@ -1725,7 +1725,25 @@
           '<div class="modal-card">' +
           '<div class="panel-form-head"><span>Upload Schedule</span><button onclick="toggleSchedule()">&#10005;</button></div>' +
           '<div style="font-size:12px; color:var(--text-dim); margin-top:6px; line-height:1.4; font-weight:300;">Upload a clear photo of your college timetable to automatically parse your classes into their correct day tabs.</div>' +
-          '<label class="upload-zone">' +
+          '<div style="margin-top:14px; background:var(--panel-2); border:1px solid var(--line); padding:12px; display:flex; flex-direction:column; gap:8px;">' +
+          '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+          '<span style="font-size:12px; font-weight:600; color:var(--text);">Lab Group / Batch (Optional)</span>' +
+          '<span style="font-size:10.5px; color:var(--text-dim);">For split / parallel labs</span>' +
+          '</div>' +
+          '<div style="font-size:11px; color:var(--text-faint); line-height:1.35;">If your timetable splits lab periods across multiple groups (e.g. Group 1, Group 2, Group 3), select your group to keep only your classes.</div>' +
+          '<select id="importGroupSelect" class="time-select" style="width:100%; padding:8px 10px; font-size:12px;" onchange="SCHEDULE.onGroupSelectChange(this.value)">' +
+          '<option value="all">Single Batch / All Classes (Default)</option>' +
+          '<option value="group_1">Group 1 / 1st Row in Split Cells (Batch A)</option>' +
+          '<option value="group_2">Group 2 / 2nd Row in Split Cells (Batch B)</option>' +
+          '<option value="group_3">Group 3 / 3rd Row in Split Cells (Batch C)</option>' +
+          '<option value="group_4">Group 4 / 4th Row in Split Cells (Batch D)</option>' +
+          '<option value="custom">Custom (Specify Group / Batch / Teacher...)</option>' +
+          '</select>' +
+          '<div id="customGroupWrap" style="display:none; margin-top:4px;">' +
+          '<input type="text" id="customGroupInput" placeholder="e.g. G2, Batch 2, or Teacher Name" maxlength="40" style="background:var(--panel); border:1px solid var(--line); color:var(--text); padding:7px 10px; font-size:12px; width:100%;" />' +
+          '</div>' +
+          '</div>' +
+          '<label class="upload-zone" style="margin-top:12px;">' +
           '<div style="font-size:13px; font-weight:500; color:var(--text);">Drop timetable photo here or click to browse</div>' +
           '<div style="font-size:11px; color:var(--text-faint); margin-top:4px;">Supports PNG, JPG, WEBP</div>' +
           '<input type="file" id="timetableFile" accept="image/*" style="display:none;" onchange="SCHEDULE.uploadTimetable(this.files[0])"/>' +
@@ -1855,10 +1873,25 @@
             showStatus("Couldn't mark cancelled: " + e.message, true);
           }
         },
+        onGroupSelectChange: function (val) {
+          var wrap = document.getElementById('customGroupWrap');
+          if (wrap) {
+            wrap.style.display = (val === 'custom') ? 'block' : 'none';
+          }
+        },
+
         uploadTimetable: async function (file, customKey) {
           if (!file) return;
           var mount = document.getElementById('importDraftMount');
-          mount.innerHTML = '<div style="padding:14px; text-align:center;"><span class="spinner"></span> Parsing timetable...</div>';
+          mount.innerHTML = '<div style="padding:16px; text-align:center; color:var(--primary); font-size:13px; display:flex; flex-direction:column; align-items:center; gap:8px;"><span class="spinner"></span> Working on your timetable...</div>';
+
+          var groupSelect = document.getElementById('importGroupSelect');
+          var groupPref = groupSelect ? groupSelect.value : 'all';
+          if (groupPref === 'custom') {
+            var customInp = document.getElementById('customGroupInput');
+            groupPref = (customInp && customInp.value.trim()) ? customInp.value.trim() : 'all';
+          }
+
           var reader = new FileReader();
           reader.onload = async function () {
             var base64 = reader.result.split(',')[1];
@@ -1870,7 +1903,7 @@
               // Try Supabase Edge Function first if no custom key provided
               if (!customKey && supabase && supabase.functions && typeof supabase.functions.invoke === 'function') {
                 var invokeRes = await supabase.functions.invoke('parse-timetable', {
-                  body: { image_base64: base64, mime_type: file.type }
+                  body: { image_base64: base64, mime_type: file.type, group_preference: groupPref }
                 });
 
                 if (invokeRes.error) {
@@ -1891,7 +1924,15 @@
 
               // Fallback to direct Gemini API call if stored key exists
               if (!data && geminiKey) {
-                var PROMPT = 'You are reading a college timetable image. Extract every class slot you can see. Return ONLY a JSON array, no prose, no markdown fences. Each item must look like: {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 1-6 (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}';
+                var groupInstruction = "";
+                if (groupPref && groupPref !== "all") {
+                  if (groupPref === "group_1") groupInstruction = " If a cell is split across multiple parallel lab groups/batches, parse ONLY the 1st / top listed group (Group 1 / Batch A) and skip other parallel batches.";
+                  else if (groupPref === "group_2") groupInstruction = " If a cell is split across multiple parallel lab groups/batches, parse ONLY the 2nd / middle listed group (Group 2 / Batch B) and skip other parallel batches.";
+                  else if (groupPref === "group_3") groupInstruction = " If a cell is split across multiple parallel lab groups/batches, parse ONLY the 3rd listed group (Group 3 / Batch C) and skip other parallel batches.";
+                  else if (groupPref === "group_4") groupInstruction = " If a cell is split across multiple parallel lab groups/batches, parse ONLY the 4th listed group (Group 4 / Batch D) and skip other parallel batches.";
+                  else groupInstruction = ' The student is in "' + groupPref + '". If a cell is split across multiple parallel batches/teachers, parse ONLY the class matching "' + groupPref + '".';
+                }
+                var PROMPT = 'You are reading a college timetable image. Parse every class slot for the student. Return ONLY a valid JSON array, no prose, no markdown fences. Each item must look like: {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 1-6 (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}' + groupInstruction;
                 var models = ['gemini-3.5-flash-lite', 'gemini-2.5-flash'];
                 var gRes = null;
 

@@ -3,40 +3,47 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const PROMPT = `You are reading a college timetable image. Extract every class slot you can see.
-Return ONLY a JSON array, no prose, no markdown fences. Each item must look like:
-{"subject_name": "string", "type": "theory" or "lab", "day_of_week": 1-6 (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}
-If a cell spans a lab block, mark type as "lab". If you cannot read a cell confidently, skip it rather than guessing.`;
-
-async function callGemini(apiKey: string, model: string, mimeType: string, base64Data: string) {
-  console.log(`calling model: ${model}`);
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: PROMPT },
-            { inline_data: { mime_type: mimeType, data: base64Data } }
-          ]
-        }],
-        generationConfig: { temperature: 0.1 }
-      })
+function buildPrompt(groupPreference?: string): string {
+  let groupInstruction = "";
+  if (groupPreference && groupPreference !== "all") {
+    if (groupPreference === "group_1") {
+      groupInstruction = "\n- LAB GROUP / BATCH FILTER: If a time slot cell is split into multiple parallel groups/sub-batches (e.g. Group 1, Group 2, Group 3 or multiple stacked lines/teachers), parse ONLY the 1st / top listed group (Group 1 / Batch A) and skip other parallel groups for that slot.";
+    } else if (groupPreference === "group_2") {
+      groupInstruction = "\n- LAB GROUP / BATCH FILTER: If a time slot cell is split into multiple parallel groups/sub-batches (e.g. Group 1, Group 2, Group 3 or multiple stacked lines/teachers), parse ONLY the 2nd / middle listed group (Group 2 / Batch B) and skip other parallel groups for that slot.";
+    } else if (groupPreference === "group_3") {
+      groupInstruction = "\n- LAB GROUP / BATCH FILTER: If a time slot cell is split into multiple parallel groups/sub-batches (e.g. Group 1, Group 2, Group 3 or multiple stacked lines/teachers), parse ONLY the 3rd listed group (Group 3 / Batch C) and skip other parallel groups for that slot.";
+    } else if (groupPreference === "group_4") {
+      groupInstruction = "\n- LAB GROUP / BATCH FILTER: If a time slot cell is split into multiple parallel groups/sub-batches, parse ONLY the 4th listed group (Group 4 / Batch D) and skip other parallel groups for that slot.";
+    } else {
+      groupInstruction = `\n- LAB GROUP / BATCH FILTER: The student is in: "${groupPreference}". If a cell is split across multiple parallel batches/teachers/groups, parse ONLY the class matching "${groupPreference}" and ignore other batches in that same time slot.`;
     }
-  );
-  console.log(`model ${model} responded with status ${res.status}`);
-  return res;
+  }
+
+  return `You are reading a college timetable image. Read and parse every class slot for the student.
+Return ONLY a valid JSON array, no prose, no markdown fences. Each item must look like:
+{"subject_name": "string", "type": "theory" or "lab", "day_of_week": 1-6 (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}
+If a cell spans a lab block, mark type as "lab". If you cannot read a cell confidently, skip it rather than guessing.${groupInstruction}`;
+}
+
+async function callGemini(apiKey: string, model: string, mimeType: string, base64Data: string, promptText: string) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  return fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { text: promptText },
+          { inline_data: { mime_type: mimeType, data: base64Data } }
+        ]
+      }]
+    })
+  });
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
-  }
-
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
@@ -48,7 +55,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { image_base64, mime_type } = await req.json();
+    const { image_base64, mime_type, group_preference } = await req.json();
     if (!image_base64 || !mime_type) {
       return new Response(
         JSON.stringify({ error: "image_base64 and mime_type are required." }),
@@ -56,10 +63,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    let geminiRes = await callGemini(geminiKey, "gemini-3.5-flash-lite", mime_type, image_base64);
+    const promptText = buildPrompt(group_preference);
+    let geminiRes = await callGemini(geminiKey, "gemini-3.5-flash-lite", mime_type, image_base64, promptText);
 
     if (!geminiRes.ok) {
-      geminiRes = await callGemini(geminiKey, "gemini-2.5-flash", mime_type, image_base64);
+      geminiRes = await callGemini(geminiKey, "gemini-2.5-flash", mime_type, image_base64, promptText);
     }
 
     if (!geminiRes.ok) {
@@ -83,27 +91,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    const geminiData = await geminiRes.json();
-    const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
+    const data = await geminiRes.json();
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
     const cleaned = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
-
-    let parsed;
-    try {
-      parsed = JSON.parse(cleaned);
-    } catch {
-      return new Response(
-        JSON.stringify({ error: "Could not parse Gemini output into timetable JSON.", raw: rawText }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const parsed = JSON.parse(cleaned);
 
     return new Response(
       JSON.stringify({ classes: parsed }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (e) {
+  } catch (e: any) {
     return new Response(
-      JSON.stringify({ error: e.message || "Failed to process request" }),
+      JSON.stringify({ error: e.message ?? "Internal server error" }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
