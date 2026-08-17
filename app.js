@@ -295,7 +295,7 @@
         );
       }
 
-      function onSignedIn(user) {
+      async function onSignedIn(user) {
         currentUser = user;
         firstRender = true;
         document.getElementById('authShell').classList.add('hidden');
@@ -306,7 +306,7 @@
         var todayIndex = new Date().getDay();
         activeDayTab = (todayIndex >= 1 && todayIndex <= 6) ? todayIndex : 1;
 
-        loadData();
+        await loadData();
         checkConfirmParam();
       }
 
@@ -448,6 +448,16 @@
         render();
       }
 
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
       function formatLocalDate(d) {
         var year = d.getFullYear();
         var month = (d.getMonth() + 1 < 10 ? '0' : '') + (d.getMonth() + 1);
@@ -461,6 +471,9 @@
         var total = attended + missed;
         if (total === 0) return { pct: null, total: 0, canMiss: null, mustAttend: null, status: 'empty' };
         var pct = (attended / total) * 100;
+        if (min <= 0) {
+          return { pct: pct, total: total, canMiss: Infinity, mustAttend: 0, status: 'safe' };
+        }
         if (min >= 100) {
           if (missed > 0) return { pct: pct, total: total, canMiss: 0, mustAttend: Infinity, status: 'impossible' };
           return { pct: pct, total: total, canMiss: 0, mustAttend: 0, status: pct >= 100 ? 'safe' : 'impossible' };
@@ -618,7 +631,7 @@
           '<div class="modal-card">' +
           '<div class="panel-form-head"><span>Edit Class</span><button onclick="AT.closeEditModal()">&#10005;</button></div>' +
           '<div style="font-size:11.5px; font-weight:400; color:var(--primary); background:rgba(59,130,246,0.1); padding:7px 10px; border:1px solid rgba(59,130,246,0.3); margin-top:6px;">' +
-          'Editing details for <b>' + s.name + '</b>' +
+          'Editing details for <b>' + escapeHtml(s.name) + '</b>' +
           '</div>' +
           '<div style="margin-top:12px; display:flex; flex-direction:column; gap:12px;">' +
           '<div>' +
@@ -686,16 +699,14 @@
 
       function renderOverall() {
         var withData = subjects.filter(function (s) { return (s.attended + s.missed) > 0; });
-        var overallPct = withData.length
-          ? withData.reduce(function (sum, s) { return sum + (s.attended / (s.attended + s.missed)) * 100; }, 0) / withData.length
-          : null;
         var totalAttended = subjects.reduce(function (a, s) { return a + s.attended; }, 0);
         var totalClasses = subjects.reduce(function (a, s) { return a + s.attended + s.missed; }, 0);
+        var overallPct = totalClasses > 0 ? (totalAttended / totalClasses) * 100 : null;
         var avgMin = subjects.length ? subjects.reduce(function (a, s) { return a + s.min; }, 0) / subjects.length : 75;
 
         var mainText = overallPct === null
           ? 'No classes logged yet'
-          : overallPct.toFixed(1) + '% average across ' + withData.length + ' subject' + (withData.length !== 1 ? 's' : '');
+          : overallPct.toFixed(1) + '% overall attendance (' + totalAttended + '/' + totalClasses + ' classes attended)';
 
         document.getElementById('overallCard').innerHTML =
           ringWithLabel(overallPct, avgMin, 80, 6, true) +
@@ -1111,11 +1122,12 @@
         var r = calc(s.attended, s.missed, s.min);
         var color = statusColor(r.status);
         var message;
-        if (r.status === 'empty') message = 'No classes logged yet';
+        if (s.min === 0) message = 'No minimum attendance required';
+        else if (r.status === 'empty') message = 'No classes logged yet';
         else if (r.status === 'impossible') message = s.missed > 0 ? "100% target missed" : "Cannot miss any class";
         else if (r.status === 'danger') message = 'Attend next ' + r.mustAttend + ' class' + (r.mustAttend !== 1 ? 'es' : '') + ' to reach ' + s.min + '%';
         else if (r.status === 'warn') message = "On boundary — 0 misses allowed";
-        else message = 'Can afford to miss ' + r.canMiss + ' more';
+        else message = 'Can afford to miss ' + (r.canMiss === Infinity ? 'any' : r.canMiss) + ' more';
 
         var safeName = s.name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
         var revealClass = firstRender ? ' reveal' : '';
@@ -1858,7 +1870,7 @@
                     })
                   });
 
-                  if (gRes.status !== 429) break;
+                  if (gRes && gRes.ok) break;
                 }
 
                 if (!gRes || !gRes.ok) {
@@ -1950,18 +1962,21 @@
 
           var validDraft = [];
           var conflictsFound = [];
+          var skippedSunday = 0;
+          var skippedInvalid = 0;
 
-          // 1. Strict Schema & Overlap Validation on AI Output (BUG-002 & BUG-006)
+          // 1. Strict Schema & Overlap Validation on AI Output (BUG-002 & BUG-006 & Bug 4)
           importDraft.forEach(function (row, idx) {
             var rawName = (row.subject_name || '').trim();
-            if (!rawName) return;
+            if (!rawName) { skippedInvalid++; return; }
 
             var dayNum = typeof row.day_of_week === 'number' ? row.day_of_week : parseInt(row.day_of_week, 10);
-            if (isNaN(dayNum) || dayNum < 1 || dayNum > 6) return; // Mon-Sat only
+            if (dayNum === 0) { skippedSunday++; return; } // Sunday not supported in Mon-Sat college schedule
+            if (isNaN(dayNum) || dayNum < 1 || dayNum > 6) { skippedInvalid++; return; }
 
             var sMin = timeStrMin(row.start_time);
             var eMin = timeStrMin(row.end_time);
-            if (eMin <= sMin) return; // end must be after start
+            if (eMin <= sMin || isNaN(sMin) || isNaN(eMin)) { skippedInvalid++; return; }
 
             // Check overlap with existing schedule in database
             var existingOnDay = validScheduleForDay(dayNum);
@@ -1993,7 +2008,9 @@
           });
 
           if (validDraft.length === 0) {
-            showStatus('Import Cancelled: All detected classes had invalid timings or collided with existing classes.', true);
+            var failMsg = 'Import Cancelled: All detected classes had invalid timings or collided with existing classes.';
+            if (skippedSunday > 0) failMsg += ' (' + skippedSunday + ' Sunday class slots are not supported)';
+            showStatus(failMsg, true);
             return;
           }
 
@@ -2053,8 +2070,12 @@
             document.getElementById('scheduleMount').innerHTML = '';
 
             var successMsg = 'Imported ' + toInsert.length + ' class' + (toInsert.length === 1 ? '' : 'es') + ' successfully!';
-            if (conflictsFound.length > 0) {
-              successMsg += ' (Skipped ' + conflictsFound.length + ' overlapping slot' + (conflictsFound.length === 1 ? '' : 's') + ': ' + conflictsFound.join(', ') + ')';
+            var skipNotes = [];
+            if (conflictsFound.length > 0) skipNotes.push(conflictsFound.length + ' overlapping');
+            if (skippedSunday > 0) skipNotes.push(skippedSunday + ' Sunday');
+            if (skippedInvalid > 0) skipNotes.push(skippedInvalid + ' invalid');
+            if (skipNotes.length > 0) {
+              successMsg += ' (Skipped: ' + skipNotes.join(', ') + ')';
             }
             showStatus(successMsg, false);
             await loadSchedule();
@@ -2184,7 +2205,8 @@
       function renderConfirmOverlay(log) {
         _pendingConfirmLog = log;
         var mount = document.getElementById('confirmOverlayMount');
-        var name = log.subjects ? log.subjects.name : 'Class';
+        var rawName = log.subjects ? log.subjects.name : 'Class';
+        var name = escapeHtml(rawName);
         mount.innerHTML =
           '<div class="panel-form" style="max-width:340px;">' +
           '<div class="panel-form-head"><span>' + name + '</span><button onclick="CONFIRM.dismiss()">&#10005;</button></div>' +
@@ -2201,6 +2223,11 @@
         dismiss: function () {
           _pendingConfirmLog = null;
           document.getElementById('confirmOverlayMount').innerHTML = '';
+          var url = new URL(window.location.href);
+          if (url.searchParams.has('confirm')) {
+            url.searchParams.delete('confirm');
+            window.history.replaceState({}, '', url.toString());
+          }
         },
         resolve: async function (logId, subjectId, status) {
           try {
