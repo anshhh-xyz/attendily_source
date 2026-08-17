@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
 
     let geminiRes = await callGemini(geminiKey, "gemini-3.5-flash-lite", mime_type, image_base64);
 
-    if (geminiRes.status === 429) {
+    if (!geminiRes.ok) {
       geminiRes = await callGemini(geminiKey, "gemini-2.5-flash", mime_type, image_base64);
     }
 
