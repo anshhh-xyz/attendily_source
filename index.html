@@ -3638,17 +3638,39 @@
           try {
             var res = await supabase.from('class_log').update({ status: status, resolved_at: new Date().toISOString() }).eq('id', logId);
             if (res.error) throw res.error;
+
             if (status === 'present' || status === 'absent') {
               var field = status === 'present' ? 'attended' : 'missed';
-              if (_pendingConfirmLog && _pendingConfirmLog.schedule_id) {
-                var counts = getSlotCounts(_pendingConfirmLog.schedule_id);
-                counts[field] = (counts[field] || 0) + 1;
+              var schedId = _pendingConfirmLog ? _pendingConfirmLog.schedule_id : null;
+
+              if (schedId) {
+                var slotObj = schedule.find(function (x) { return x.id === schedId; });
+                var curSlotAtt = slotObj ? (slotObj.attended || 0) : 0;
+                var curSlotMiss = slotObj ? (slotObj.missed || 0) : 0;
+
+                if (field === 'attended') curSlotAtt += 1;
+                else curSlotMiss += 1;
+
+                if (slotObj) {
+                  slotObj.attended = curSlotAtt;
+                  slotObj.missed = curSlotMiss;
+                }
+                slotCounts[schedId] = { attended: curSlotAtt, missed: curSlotMiss };
                 saveSlotCounts();
+
+                // Persist slot counts to Supabase class_schedule table
+                var schedUp = await supabase.from('class_schedule')
+                  .update({ attended: curSlotAtt, missed: curSlotMiss })
+                  .eq('id', schedId);
+                if (schedUp.error) console.error('Error updating class_schedule slot:', schedUp.error);
+
                 syncSubjectAttendanceFromSlots(subjectId);
               } else {
                 var s = subjects.find(function (x) { return x.id === subjectId; });
                 if (s) s[field] = (s[field] || 0) + 1;
               }
+
+              // Persist subject total counts to Supabase subjects table
               var sub = subjects.find(function (x) { return x.id === subjectId; });
               if (sub) {
                 var updateRes = await supabase.from('subjects').update({ attended: sub.attended, missed: sub.missed }).eq('id', subjectId);
@@ -3656,6 +3678,7 @@
                 render();
               }
             }
+
             CONFIRM.dismiss();
             showStatus('Marked as ' + status + '.', false);
             var url = new URL(window.location.href);
