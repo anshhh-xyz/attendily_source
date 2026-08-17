@@ -453,7 +453,7 @@
 
       async function loadData() {
         try {
-          var res = await supabase.from('subjects').select('*').order('created_at', { ascending: true });
+          var res = await supabase.from('subjects').select('*').neq('archived', true).order('created_at', { ascending: true });
           if (res.error) throw res.error;
           subjects = res.data.map(rowToLocal);
           showStatus(null);
@@ -461,7 +461,7 @@
           showStatus("Couldn't reach the server: " + e.message, true);
         }
         try {
-          var schedRes = await supabase.from('class_schedule').select('*, subjects(name,type)').order('day_of_week').order('start_time');
+          var schedRes = await supabase.from('class_schedule').select('*, subjects(name,type)').neq('active', false).order('day_of_week').order('start_time');
           if (schedRes.error) throw schedRes.error;
           schedule = schedRes.data;
         } catch (e) {
@@ -1268,7 +1268,7 @@
                 '</button>'
               : '') +
             '<button class="ghost-btn danger" style="padding:10px; font-weight:500;" onclick="AT.removeSubject(\'' + subjectId + '\')">' +
-            (isMultipleDays ? 'Delete Subject Completely (All Days)' : 'Delete Subject & History') +
+            (isMultipleDays ? 'Delete Subject Completely (All Days)' : 'Archive Subject & Preserve History') +
             '</button>' +
             '<button class="ghost-btn" style="padding:8px;" onclick="AT.closeDeleteModal()">Cancel</button>' +
             '</div>' +
@@ -1284,14 +1284,15 @@
         removeClassSlot: async function (slotId) {
           AT.closeDeleteModal();
           try {
-            var res = await supabase.from('class_schedule').delete().eq('id', slotId);
+            // Soft delete schedule slot to preserve historical logs
+            var res = await supabase.from('class_schedule').update({ active: false }).eq('id', slotId);
             if (res.error) throw res.error;
             if (slotCounts[slotId]) {
               delete slotCounts[slotId];
               saveSlotCounts();
             }
-            showStatus('Class removed from ' + DAY_FULL_NAMES[activeDayTab] + '.', false);
-            await loadSchedule();
+            showStatus('Class removed from ' + DAY_FULL_NAMES[activeDayTab] + ' (history preserved).', false);
+            await loadData();
             initializeSlotCountsForSubjects();
           } catch (e) {
             showStatus("Couldn't remove class slot: " + e.message, true);
@@ -1449,7 +1450,7 @@
 
           addFormType = 'theory';
           showAdd = false;
-          await loadSchedule();
+          await loadData();
           render();
         },
 
@@ -1464,12 +1465,15 @@
           subjects = subjects.filter(function (s) { return s.id !== id; });
           render();
           try {
-            var res = await supabase.from('subjects').delete().eq('id', id);
+            // Soft delete subject (archived = true) so historical attendance is preserved
+            var res = await supabase.from('subjects').update({ archived: true }).eq('id', id);
             if (res.error) throw res.error;
-            showStatus(null);
+            // Also deactivate all schedule slots for this subject
+            await supabase.from('class_schedule').update({ active: false }).eq('subject_id', id);
+            showStatus('Subject archived. Historical attendance records are preserved.', false);
           } catch (e) {
             subjects = prev;
-            showStatus("Couldn't delete: " + e.message, true);
+            showStatus("Couldn't archive: " + e.message, true);
             render();
           }
         },
@@ -1668,7 +1672,7 @@
             renderEditModal();
             showStatus('Class details updated successfully!', false);
             activeDayTab = targetDay;
-            await loadSchedule();
+            await loadData();
           } catch (e) {
             showStatus("Couldn't update class: " + e.message, true);
           }
@@ -1818,7 +1822,7 @@
           try {
             var res = await supabase.from('class_schedule').insert([{ subject_id: subjectId, day_of_week: day, start_time: start, end_time: end }]);
             if (res.error) throw res.error;
-            await loadSchedule();
+            await loadData();
           } catch (e) {
             showStatus("Couldn't add class: " + e.message, true);
           }
@@ -1827,7 +1831,7 @@
           try {
             var res = await supabase.from('class_schedule').delete().eq('id', id);
             if (res.error) throw res.error;
-            await loadSchedule();
+            await loadData();
           } catch (e) {
             showStatus("Couldn't remove class: " + e.message, true);
           }
@@ -2115,7 +2119,7 @@
               successMsg += ' (Skipped: ' + skipNotes.join(', ') + ')';
             }
             showStatus(successMsg, false);
-            await loadSchedule();
+            await loadData();
             render();
           } catch (e) {
             showStatus("Couldn't import timetable: " + e.message, true);
