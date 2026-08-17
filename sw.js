@@ -1,3 +1,11 @@
+self.addEventListener('install', function (e) {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', function (e) {
+  e.waitUntil(self.clients.claim());
+});
+
 self.addEventListener("push", function(event) {
   var data = event.data ? event.data.json() : {};
   var title = data.title || "Attendily";

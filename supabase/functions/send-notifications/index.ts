@@ -73,8 +73,10 @@ Deno.serve(async (req) => {
 
   for (const cls of upcoming ?? []) {
     const endMin = timeToMinutes(cls.end_time);
-    console.log(`checking schedule ${cls.id}: end=${cls.end_time} (${endMin}min) vs now=${minutes}min, diff=${endMin - minutes}`);
-    if (endMin - minutes !== 5) continue;
+    const diff = endMin - minutes;
+    console.log(`checking schedule ${cls.id}: end=${cls.end_time} (${endMin}min) vs now=${minutes}min, diff=${diff}`);
+    // 3 to 6 minute grace window (prevents skipped notifications from cron latency/cold starts)
+    if (diff < 3 || diff > 6) continue;
 
     const { data: existing } = await supabase
       .from("class_log")

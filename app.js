@@ -262,10 +262,25 @@
           currentUser = null;
           subjects = [];
           schedule = [];
+          slotCounts = {};
+          mutedSubjectIds = [];
+          _pendingConfirmLog = null;
+          importDraft = null;
           showAdd = false;
+          showEditModal = false;
+          showSchedule = false;
           pwPanelOpen = false;
           firstRender = true;
           activeDayTab = 1;
+          try {
+            localStorage.removeItem('attendily_slot_counts');
+            localStorage.removeItem('attendily_muted_subjects');
+            localStorage.removeItem('attendily_gemini_key');
+          } catch (e) { }
+          var schedMount = document.getElementById('scheduleMount');
+          if (schedMount) schedMount.innerHTML = '';
+          var confMount = document.getElementById('confirmOverlayMount');
+          if (confMount) confMount.innerHTML = '';
           document.getElementById('appShell').classList.add('hidden');
           document.getElementById('authShell').classList.remove('hidden');
           authMode = 'signin';
@@ -1857,7 +1872,7 @@
 
               // Fallback to direct Gemini API call if stored key exists
               if (!data && geminiKey) {
-                var PROMPT = 'You are reading a college timetable image. Extract every class slot you can see. Return ONLY a JSON array, no prose, no markdown fences. Each item must look like: {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 0-6 (0=Sunday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}';
+                var PROMPT = 'You are reading a college timetable image. Extract every class slot you can see. Return ONLY a JSON array, no prose, no markdown fences. Each item must look like: {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 1-6 (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}';
                 var models = ['gemini-3.5-flash-lite', 'gemini-2.5-flash'];
                 var gRes = null;
 

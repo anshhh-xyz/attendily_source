@@ -5,7 +5,7 @@ const corsHeaders = {
 
 const PROMPT = `You are reading a college timetable image. Extract every class slot you can see.
 Return ONLY a JSON array, no prose, no markdown fences. Each item must look like:
-{"subject_name": "string", "type": "theory" or "lab", "day_of_week": 0-6 (0=Sunday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}
+{"subject_name": "string", "type": "theory" or "lab", "day_of_week": 1-6 (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}
 If a cell spans a lab block, mark type as "lab". If you cannot read a cell confidently, skip it rather than guessing.`;
 
 async function callGemini(apiKey: string, model: string, mimeType: string, base64Data: string) {
