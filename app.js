@@ -1926,13 +1926,9 @@
               if (!data && geminiKey) {
                 var groupInstruction = "";
                 if (groupPref && groupPref !== "all") {
-                  if (groupPref === "group_1") groupInstruction = " The student is in Group 1 / Batch A. If a cell contains multiple parallel stacked groups/teachers, parse ONLY Group 1. If a lab on a specific day is only for other groups, do not assign it to Group 1.";
-                  else if (groupPref === "group_2") groupInstruction = " The student is in Group 2 / Batch B. If a cell contains multiple parallel stacked groups/teachers, parse ONLY Group 2. If a lab on a specific day is only for other groups, do not assign it to Group 2.";
-                  else if (groupPref === "group_3") groupInstruction = " The student is in Group 3 / Batch C. If a cell contains multiple parallel stacked groups/teachers, parse ONLY Group 3. If a lab on a specific day is only for other groups, do not assign it to Group 3.";
-                  else if (groupPref === "group_4") groupInstruction = " The student is in Group 4 / Batch D. If a cell contains multiple parallel stacked groups/teachers, parse ONLY Group 4. If a lab on a specific day is only for other groups, do not assign it to Group 4.";
-                  else groupInstruction = ' The student is in "' + groupPref + '". If a cell is split across multiple batches, parse ONLY the class matching "' + groupPref + '". If a lab is only for other groups, do not assign it.';
+                  groupInstruction = " Target student: " + (groupPref === 'group_1' ? 'Group 1 (Batch A)' : groupPref === 'group_2' ? 'Group 2 (Batch B)' : groupPref === 'group_3' ? 'Group 3 (Batch C)' : groupPref) + ". Each lab subject occurs ONLY ONCE per week per student. Different groups take the same lab on different days (e.g. Group 1 on Mon, Group 2 on Fri). Parse a lab ONLY on the day this group has it, never assign another group's lab or duplicate labs across days.";
                 }
-                var PROMPT = 'You are reading a college timetable image. Parse every class slot for the student. Return ONLY a valid JSON array, no prose, no markdown fences. Each item must look like: {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 1-6 (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}. Always parse un-split full class lectures. Never cross-assign other groups labs if the student has a free period.' + groupInstruction;
+                var PROMPT = 'You are reading a college timetable image. Parse every class slot for the student. Return ONLY a valid JSON array, no prose, no markdown fences. Each item must look like: {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 1-6 (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}. Always parse un-split full class lectures. Leave slots empty when the student has a free period.' + groupInstruction;
                 var models = ['gemini-3.5-flash-lite', 'gemini-2.5-flash'];
                 var gRes = null;
 

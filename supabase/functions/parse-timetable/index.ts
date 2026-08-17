@@ -6,27 +6,34 @@ const corsHeaders = {
 function buildPrompt(groupPreference?: string): string {
   let groupInstruction = "";
   if (groupPreference && groupPreference !== "all") {
-    if (groupPreference === "group_1") {
-      groupInstruction = "\n- LAB GROUP / BATCH FILTER: The student is in Group 1 / Batch A. If a cell contains multiple parallel stacked groups/teachers, parse ONLY the 1st / top listed group (Group 1) and ignore other parallel groups in that cell. If a lab is scheduled on a day ONLY for other groups (and not Group 1), do NOT assign that lab to Group 1.";
-    } else if (groupPreference === "group_2") {
-      groupInstruction = "\n- LAB GROUP / BATCH FILTER: The student is in Group 2 / Batch B. If a cell contains multiple parallel stacked groups/teachers, parse ONLY the 2nd / middle listed group (Group 2) and ignore other parallel groups in that cell. If a lab is scheduled on a day ONLY for other groups (and not Group 2), do NOT assign that lab to Group 2.";
-    } else if (groupPreference === "group_3") {
-      groupInstruction = "\n- LAB GROUP / BATCH FILTER: The student is in Group 3 / Batch C. If a cell contains multiple parallel stacked groups/teachers, parse ONLY the 3rd listed group (Group 3) and ignore other parallel groups in that cell. If a lab is scheduled on a day ONLY for other groups (and not Group 3), do NOT assign that lab to Group 3.";
-    } else if (groupPreference === "group_4") {
-      groupInstruction = "\n- LAB GROUP / BATCH FILTER: The student is in Group 4 / Batch D. If a cell contains multiple parallel stacked groups/teachers, parse ONLY the 4th listed group (Group 4) and ignore other parallel groups in that cell. If a lab is scheduled on a day ONLY for other groups (and not Group 4), do NOT assign that lab to Group 4.";
-    } else {
-      groupInstruction = `\n- LAB GROUP / BATCH FILTER: The student is in: "${groupPreference}". If a cell is split across multiple parallel batches/teachers/groups, parse ONLY the class matching "${groupPreference}". If a lab is scheduled on a day ONLY for other groups, do NOT assign that lab to this student.`;
-    }
+    const groupName = groupPreference === "group_1" ? "Group 1 / Batch A (1st Group)" :
+                      groupPreference === "group_2" ? "Group 2 / Batch B (2nd Group)" :
+                      groupPreference === "group_3" ? "Group 3 / Batch C (3rd Group)" :
+                      groupPreference === "group_4" ? "Group 4 / Batch D (4th Group)" :
+                      `"${groupPreference}"`;
+
+    groupInstruction = `
+- TARGET STUDENT GROUP: ${groupName}
+
+- WEEKLY LAB ROTATION & GROUP MAPPING RULES:
+  1. EACH LAB SUBJECT OCCURS ONLY ONCE PER WEEK: In college timetables, each practical lab course (e.g. "Computational Methods Lab", "Data Structures Lab", "OOP Lab", "Digital Logic Lab") is attended by a student group EXACTLY ONCE per week.
+  2. ROTATION ACROSS DAYS: Different groups take the same lab on different days of the week.
+     - Example: If "Computational Methods Lab" appears on Monday (for Group 1), on Thursday (for Group 3), and on Friday (for Group 2):
+       * For Group 1: Parse it ONLY on Monday. Do NOT parse it on Thursday or Friday (Friday is a free period / off for Group 1).
+       * For Group 2: Parse it ONLY on Friday. Do NOT parse it on Monday or Thursday.
+       * For Group 3: Parse it ONLY on Thursday. Do NOT parse it on Monday or Friday.
+  3. PARTIALLY FILLED CELLS: If a cell only lists 2 groups (e.g. Group 2 and Group 3), and the student is in Group 1, Group 1 has NO class during that slot — do NOT pick either row for Group 1.
+  4. NO DUPLICATE LABS IN A WEEK: Never output the same lab subject on multiple days for the same student group.`;
   }
 
-  return `You are reading a college timetable image. Read and parse every class slot for the student.
+  return `You are an expert college timetable analyzer reading a schedule image. Parse every class slot for the target student.
 Return ONLY a valid JSON array, no prose, no markdown fences. Each item must look like:
 {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 1-6 (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}
-If a cell spans a lab block, mark type as "lab". If you cannot read a cell confidently, skip it rather than guessing.
+If a cell spans a lab block (usually 2 or 3 hours/periods), mark type as "lab". If you cannot read a cell confidently, skip it rather than guessing.
 
 CRITICAL RULES:
-1. FULL-CLASS LECTURES: Never drop regular full-class lectures, common periods (Library/Sports), or single-batch classes. If a cell has no internal group splits, ALWAYS parse it normally for that day.
-2. ROTATIONAL LABS & FREE PERIODS: If a lab is scheduled on a specific day only for certain batches (and the student's batch has an off/free period or their turn is on a different day), do NOT assign other batches' labs to the student.${groupInstruction}`;
+1. FULL-CLASS COMMON LECTURES: Regular theory lectures (e.g. Discrete Mathematics, Digital Logic theory) where the entire section attends together MUST be parsed on all days they appear.
+2. FREE PERIODS & EMPTY SLOTS: When a student's group has no lab on a given day/slot, leave that slot completely empty. Never assign another group's lab to this student.${groupInstruction}`;
 }
 
 async function callGemini(apiKey: string, model: string, mimeType: string, base64Data: string, promptText: string) {
