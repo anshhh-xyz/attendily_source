@@ -1926,13 +1926,13 @@
               if (!data && geminiKey) {
                 var groupInstruction = "";
                 if (groupPref && groupPref !== "all") {
-                  if (groupPref === "group_1") groupInstruction = " If a cell is split across multiple parallel lab groups/batches, parse ONLY the 1st / top listed group (Group 1 / Batch A) and skip other parallel batches.";
-                  else if (groupPref === "group_2") groupInstruction = " If a cell is split across multiple parallel lab groups/batches, parse ONLY the 2nd / middle listed group (Group 2 / Batch B) and skip other parallel batches.";
-                  else if (groupPref === "group_3") groupInstruction = " If a cell is split across multiple parallel lab groups/batches, parse ONLY the 3rd listed group (Group 3 / Batch C) and skip other parallel batches.";
-                  else if (groupPref === "group_4") groupInstruction = " If a cell is split across multiple parallel lab groups/batches, parse ONLY the 4th listed group (Group 4 / Batch D) and skip other parallel batches.";
-                  else groupInstruction = ' The student is in "' + groupPref + '". If a cell is split across multiple parallel batches/teachers, parse ONLY the class matching "' + groupPref + '".';
+                  if (groupPref === "group_1") groupInstruction = " If a cell is split across multiple parallel lab groups/batches, parse ONLY the 1st / top listed group (Group 1 / Batch A) and skip other parallel batches. For single/un-split classes, parse them normally.";
+                  else if (groupPref === "group_2") groupInstruction = " If a cell is split across multiple parallel lab groups/batches, parse ONLY the 2nd / middle listed group (Group 2 / Batch B) and skip other parallel batches. For single/un-split classes, parse them normally.";
+                  else if (groupPref === "group_3") groupInstruction = " If a cell is split across multiple parallel lab groups/batches, parse ONLY the 3rd listed group (Group 3 / Batch C) and skip other parallel batches. For single/un-split classes, parse them normally.";
+                  else if (groupPref === "group_4") groupInstruction = " If a cell is split across multiple parallel lab groups/batches, parse ONLY the 4th listed group (Group 4 / Batch D) and skip other parallel batches. For single/un-split classes, parse them normally.";
+                  else groupInstruction = ' The student is in "' + groupPref + '". If a cell is split across multiple parallel batches/teachers, parse ONLY the class matching "' + groupPref + '". For single/un-split classes, parse them normally.';
                 }
-                var PROMPT = 'You are reading a college timetable image. Parse every class slot for the student. Return ONLY a valid JSON array, no prose, no markdown fences. Each item must look like: {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 1-6 (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}' + groupInstruction;
+                var PROMPT = 'You are reading a college timetable image. Parse every class slot for the student. Return ONLY a valid JSON array, no prose, no markdown fences. Each item must look like: {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 1-6 (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}. Never drop regular full-class lectures or single-batch classes.' + groupInstruction;
                 var models = ['gemini-3.5-flash-lite', 'gemini-2.5-flash'];
                 var gRes = null;
 
