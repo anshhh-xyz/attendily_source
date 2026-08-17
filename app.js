@@ -353,7 +353,16 @@
       }
 
       function rowToLocal(r) {
-        return { id: r.id, name: r.name, type: r.type, min: r.min_attendance, attended: r.attended, missed: r.missed };
+        return {
+          id: r.id,
+          name: r.name,
+          type: r.type || 'theory',
+          min: r.min_attendance,
+          attended: r.attended,
+          missed: r.missed,
+          notifications_enabled: r.notifications_enabled !== false,
+          archived: r.archived === true
+        };
       }
 
       
@@ -639,7 +648,7 @@
 
         var startMinFormatted = (editStartMin < 10 ? '0' : '') + editStartMin;
         var endMinFormatted = (editEndMin < 10 ? '0' : '') + editEndMin;
-        var isMuted = mutedSubjectIds.includes(s.id);
+        var isMuted = (s.notifications_enabled === false) || mutedSubjectIds.includes(s.id);
 
         mount.innerHTML =
           '<div class="modal-overlay" onclick="if(event.target===this) AT.closeEditModal()">' +
@@ -1400,7 +1409,7 @@
 
           try {
             var res = await supabase.from('subjects')
-              .insert([{ name: name, type: addFormType, min_attendance: min, attended: 0, missed: 0 }])
+              .insert([{ name: name, type: addFormType, min_attendance: min, attended: 0, missed: 0, notifications_enabled: enableNotif, archived: false }])
               .select();
             if (res.error) throw res.error;
 
@@ -1422,7 +1431,12 @@
               return { subject_id: newSubject.id, day_of_week: d, start_time: start24, end_time: end24 };
             });
             var schedRes = await supabase.from('class_schedule').insert(schedRows);
-            if (schedRes.error) throw schedRes.error;
+            if (schedRes.error) {
+              // Rollback newly created subject to avoid orphan subject rows
+              try { await supabase.from('subjects').delete().eq('id', newSubject.id); } catch (_) {}
+              subjects = subjects.filter(function (x) { return x.id !== newSubject.id; });
+              throw schedRes.error;
+            }
 
             if (pushWarning) {
               showStatus(pushWarning, true);
@@ -1626,7 +1640,7 @@
 
           try {
             var subRes = await supabase.from('subjects')
-              .update({ name: name, type: editFormType, min_attendance: min })
+              .update({ name: name, type: editFormType, min_attendance: min, notifications_enabled: enableNotif })
               .eq('id', editSubjectId);
             if (subRes.error) throw subRes.error;
 
@@ -1640,6 +1654,7 @@
               subObj.name = name;
               subObj.type = editFormType;
               subObj.min = min;
+              subObj.notifications_enabled = enableNotif;
             }
 
             if (!enableNotif) {
@@ -2077,7 +2092,14 @@
 
             if (toInsert.length > 0) {
               var res = await supabase.from('class_schedule').insert(toInsert);
-              if (res.error) throw res.error;
+              if (res.error) {
+                // Rollback newly inserted batch subjects to prevent orphan data
+                if (newSubjects.length > 0) {
+                  var newIds = newSubjects.map(function (s) { return nameToId[s.name.toLowerCase().trim()]; }).filter(Boolean);
+                  try { await supabase.from('subjects').delete().in('id', newIds); } catch (_) {}
+                }
+                throw res.error;
+              }
             }
 
             importDraft = null;

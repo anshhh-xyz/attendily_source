@@ -5,6 +5,8 @@ create table subjects (
   min_attendance int not null default 75,
   attended int not null default 0,
   missed int not null default 0,
+  notifications_enabled boolean not null default true,
+  archived boolean not null default false,
   created_at timestamptz default now()
 );
 

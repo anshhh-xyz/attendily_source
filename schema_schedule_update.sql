@@ -14,3 +14,8 @@ begin
       for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
   end if;
 end $$;
+
+-- Migration: Add notifications_enabled and archived flags to subjects
+alter table subjects
+  add column if not exists notifications_enabled boolean not null default true,
+  add column if not exists archived boolean not null default false;

@@ -72,6 +72,14 @@ Deno.serve(async (req) => {
   console.log(`found ${upcoming?.length ?? 0} class_schedule row(s) for today`);
 
   for (const cls of upcoming ?? []) {
+    const subject = (cls as any).subjects;
+    // Skip archived subjects or subjects where notifications have been muted/disabled
+    if (subject?.archived === true) continue;
+    if (subject?.notifications_enabled === false) {
+      console.log(`Skipping notification for muted subject: ${subject?.name}`);
+      continue;
+    }
+
     const endMin = timeToMinutes(cls.end_time);
     const diff = endMin - minutes;
     console.log(`checking schedule ${cls.id}: end=${cls.end_time} (${endMin}min) vs now=${minutes}min, diff=${diff}`);
