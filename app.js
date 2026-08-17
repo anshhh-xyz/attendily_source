@@ -448,6 +448,13 @@
         render();
       }
 
+      function formatLocalDate(d) {
+        var year = d.getFullYear();
+        var month = (d.getMonth() + 1 < 10 ? '0' : '') + (d.getMonth() + 1);
+        var day = (d.getDate() < 10 ? '0' : '') + d.getDate();
+        return year + '-' + month + '-' + day;
+      }
+
       function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
 
       function calc(attended, missed, min) {
@@ -1790,7 +1797,7 @@
           var diff = (cls.day_of_week - today.getDay() + 7) % 7;
           var target = new Date(today);
           target.setDate(today.getDate() + diff);
-          var dateStr = target.toISOString().slice(0, 10);
+          var dateStr = formatLocalDate(target);
           try {
             var res = await supabase.from('class_log').upsert({
               schedule_id: cls.id, subject_id: cls.subject_id, class_date: dateStr,
@@ -1934,15 +1941,70 @@
         },
         confirmImport: async function () {
           if (!importDraft || !importDraft.length) return;
+
+          // Helper to convert HH:MM to minutes
+          function timeStrMin(t) {
+            var parts = (t || '').split(':').map(Number);
+            return (parts[0] || 0) * 60 + (parts[1] || 0);
+          }
+
+          var validDraft = [];
+          var conflictsFound = [];
+
+          // 1. Strict Schema & Overlap Validation on AI Output (BUG-002 & BUG-006)
+          importDraft.forEach(function (row, idx) {
+            var rawName = (row.subject_name || '').trim();
+            if (!rawName) return;
+
+            var dayNum = typeof row.day_of_week === 'number' ? row.day_of_week : parseInt(row.day_of_week, 10);
+            if (isNaN(dayNum) || dayNum < 1 || dayNum > 6) return; // Mon-Sat only
+
+            var sMin = timeStrMin(row.start_time);
+            var eMin = timeStrMin(row.end_time);
+            if (eMin <= sMin) return; // end must be after start
+
+            // Check overlap with existing schedule in database
+            var existingOnDay = validScheduleForDay(dayNum);
+            var hasDbConflict = existingOnDay.some(function (slot) {
+              var existS = timeStrMin(slot.start_time);
+              var existE = timeStrMin(slot.end_time);
+              return (sMin < existE && eMin > existS);
+            });
+
+            // Check overlap with other slots in this current batch
+            var hasBatchConflict = validDraft.some(function (slot) {
+              if (slot.day_of_week !== dayNum) return false;
+              var bS = timeStrMin(slot.start_time);
+              var bE = timeStrMin(slot.end_time);
+              return (sMin < bE && eMin > bS);
+            });
+
+            if (hasDbConflict || hasBatchConflict) {
+              conflictsFound.push(rawName + ' (' + DAY_NAMES[dayNum] + ' ' + row.start_time + '–' + row.end_time + ')');
+            } else {
+              validDraft.push({
+                subject_name: rawName,
+                type: row.type === 'lab' ? 'lab' : 'theory',
+                day_of_week: dayNum,
+                start_time: row.start_time,
+                end_time: row.end_time
+              });
+            }
+          });
+
+          if (validDraft.length === 0) {
+            showStatus('Import Cancelled: All detected classes had invalid timings or collided with existing classes.', true);
+            return;
+          }
+
           var nameToId = {};
           subjects.forEach(function (s) { nameToId[s.name.toLowerCase().trim()] = s.id; });
 
           var newSubjects = [];
           var seenNew = new Set();
 
-          importDraft.forEach(function (row) {
-            var rawName = (row.subject_name || '').trim();
-            if (!rawName) return;
+          validDraft.forEach(function (row) {
+            var rawName = row.subject_name;
             var key = rawName.toLowerCase();
             if (!nameToId[key] && !seenNew.has(key)) {
               seenNew.add(key);
@@ -1967,15 +2029,12 @@
             }
 
             var toInsert = [];
-            importDraft.forEach(function (row) {
-              var rawName = (row.subject_name || '').trim();
-              var subjectId = nameToId[rawName.toLowerCase()];
-              // Map day_of_week (1-6 Mon-Sat)
-              var dayNum = typeof row.day_of_week === 'number' ? row.day_of_week : parseInt(row.day_of_week, 10);
-              if (subjectId && dayNum >= 0 && dayNum <= 6) {
+            validDraft.forEach(function (row) {
+              var subjectId = nameToId[row.subject_name.toLowerCase()];
+              if (subjectId) {
                 toInsert.push({
                   subject_id: subjectId,
-                  day_of_week: dayNum,
+                  day_of_week: row.day_of_week,
                   start_time: row.start_time,
                   end_time: row.end_time,
                   attended: 0,
@@ -1992,7 +2051,12 @@
             importDraft = null;
             showSchedule = false;
             document.getElementById('scheduleMount').innerHTML = '';
-            showStatus('Timetable parsed & added into day tabs successfully!', false);
+
+            var successMsg = 'Imported ' + toInsert.length + ' class' + (toInsert.length === 1 ? '' : 'es') + ' successfully!';
+            if (conflictsFound.length > 0) {
+              successMsg += ' (Skipped ' + conflictsFound.length + ' overlapping slot' + (conflictsFound.length === 1 ? '' : 's') + ': ' + conflictsFound.join(', ') + ')';
+            }
+            showStatus(successMsg, false);
             await loadSchedule();
             render();
           } catch (e) {
@@ -2024,6 +2088,15 @@
         },
 
         isActuallyEnabled: async function () {
+          if ('serviceWorker' in navigator && 'PushManager' in window) {
+            try {
+              var reg = await navigator.serviceWorker.getRegistration();
+              if (reg) {
+                var sub = await reg.pushManager.getSubscription();
+                return !!sub;
+              }
+            } catch (e) { }
+          }
           await refreshPushState();
           return pushEnabled;
         },
@@ -2087,8 +2160,7 @@
                 }
               }
             }
-            await supabase.from('push_tokens').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-            showStatus('Push notifications turned off.', false);
+            showStatus('Push notifications turned off for this device.', false);
           } catch (e) {
             showStatus("Couldn't fully disable notifications: " + e.message, true);
           }

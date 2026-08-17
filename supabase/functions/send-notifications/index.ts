@@ -85,6 +85,7 @@ Deno.serve(async (req) => {
 
     if (existing) { console.log(`already logged for ${cls.id} today, skipping`); continue; }
 
+    // Atomic Insert with Idempotency protection (BUG-008)
     const { data: log, error: insertErr } = await supabase
       .from("class_log")
       .insert({
@@ -95,9 +96,12 @@ Deno.serve(async (req) => {
         notified_at: new Date().toISOString()
       })
       .select()
-      .single();
+      .maybeSingle();
 
-    if (insertErr) console.log(`class_log insert error: ${insertErr.message}`);
+    if (insertErr) {
+      console.log(`class_log insert (already exists or error): ${insertErr.message}`);
+      continue;
+    }
 
     if (log) {
       console.log(`matched! sending push for schedule ${cls.id} to user ${cls.user_id}`);
