@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
 
   const { data: upcoming, error: upcomingErr } = await supabase
     .from("class_schedule")
-    .select("id, user_id, subject_id, start_time, end_time, subjects(name, type)")
+    .select("id, user_id, subject_id, start_time, end_time, subjects(name, type, notifications_enabled)")
     .eq("day_of_week", dayOfWeek);
 
   if (upcomingErr) console.log(`class_schedule query error: ${upcomingErr.message}`);
