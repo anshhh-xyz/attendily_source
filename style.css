@@ -1573,3 +1573,111 @@
   background: rgba(239, 68, 68, 0.18);
   border-color: var(--danger);
 }
+/* ==========================================================================
+   ENHANCED MOBILE & COMPACT SCREEN RESPONSIVENESS (< 480px)
+   ========================================================================== */
+
+@media (max-width: 480px) {
+  .wrap {
+    padding: 0 10px 48px;
+  }
+
+  .topbar {
+    margin: 0 -10px 14px;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .topbar-nav {
+    gap: 6px;
+  }
+
+  .topbar-btn {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .email {
+    max-width: 100px;
+    font-size: 11px;
+  }
+
+  .days-nav-section {
+    margin-bottom: 14px;
+  }
+
+  .day-tab {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .modal-card {
+    padding: 16px 14px;
+    max-height: 90vh;
+    border-radius: 8px;
+  }
+
+  .time-picker-box {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .time-block {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+
+  .time-block-label {
+    width: 32px;
+    font-size: 11px;
+  }
+
+  .time-select {
+    font-size: 12px;
+    padding: 5px 6px;
+    min-width: 54px;
+  }
+
+  .time-input-num {
+    font-size: 12px;
+    padding: 5px 4px;
+    width: 40px;
+  }
+
+  .ampm-btn {
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+
+  .time-duration-badge {
+    font-size: 10px;
+    padding: 1px 5px;
+  }
+
+  .grid {
+    padding: 8px 0;
+    gap: 12px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .step-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+  }
+
+  .auth-card {
+    padding: 18px 14px;
+    width: 100%;
+  }
+
+  .auth-input {
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+}
