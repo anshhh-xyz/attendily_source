@@ -1,3 +1,8 @@
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
 
@@ -51,7 +56,10 @@ async function pushToUser(userId: string, payload: Record<string, unknown>) {
   }
 }
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
   const { date, minutes, dayOfWeek } = nowInKolkata();
   console.log(`run at ${date} minutes=${minutes} dayOfWeek=${dayOfWeek}`);
 
@@ -124,5 +132,5 @@ Deno.serve(async () => {
     await supabase.from("class_log").update({ final_reminder_sent: true }).eq("id", log.id);
   }
 
-  return new Response("ok");
+  return new Response("ok", { headers: { ...corsHeaders, "Content-Type": "text/plain" } });
 });

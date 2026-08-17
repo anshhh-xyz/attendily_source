@@ -18,8 +18,9 @@ self.addEventListener("notificationclick", function(event) {
       for (var i = 0; i < clientList.length; i++) {
         var client = clientList[i];
         if ("focus" in client) {
-          client.navigate(url);
-          return client.focus();
+          return client.navigate(url).then(function() {
+            return client.focus();
+          });
         }
       }
       if (clients.openWindow) return clients.openWindow(url);

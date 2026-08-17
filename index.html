@@ -50,6 +50,9 @@
       margin: 0;
       padding: 0;
       background: var(--bg);
+      min-height: 100vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     body {
@@ -1357,11 +1360,7 @@
       vertical-align: middle;
     }
 
-    html, body {
-      min-height: 100vh;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
+    /* Merged into main html, body rule above */
 
     @media (max-width: 640px) {
       .wrap {
@@ -1836,7 +1835,10 @@
       function showStatus(msg, isError) {
         var mount = document.getElementById('statusMount');
         if (!msg) { mount.innerHTML = ''; return; }
-        mount.innerHTML = '<div class="status-banner">' + msg + '</div>';
+        var style = isError
+          ? 'background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:#ffffff;'
+          : 'background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); color:var(--safe);';
+        mount.innerHTML = '<div class="status-banner" style="' + style + '">' + msg + '</div>';
       }
 
       function rowToLocal(r) {
@@ -2886,8 +2888,8 @@
 
           addFormType = 'theory';
           showAdd = false;
+          await loadSchedule();
           render();
-          loadSchedule();
         },
 
         removeSubject: async function (id) {
@@ -3131,6 +3133,7 @@
           showStatus("Couldn't load schedule: " + e.message, true);
           schedule = [];
         }
+        initializeSlotCountsForSubjects();
         renderSchedule();
         render();
       }
@@ -3537,6 +3540,8 @@
         }
       };
 
+      var _pendingConfirmLog = null;
+
       async function checkConfirmParam() {
         var params = new URLSearchParams(window.location.search);
         var logId = params.get('confirm');
@@ -3544,11 +3549,13 @@
         try {
           var res = await supabase.from('class_log').select('*, subjects(name)').eq('id', logId).maybeSingle();
           if (res.error || !res.data) return;
+          _pendingConfirmLog = res.data;
           renderConfirmOverlay(res.data);
         } catch (e) { }
       }
 
       function renderConfirmOverlay(log) {
+        _pendingConfirmLog = log;
         var mount = document.getElementById('confirmOverlayMount');
         var name = log.subjects ? log.subjects.name : 'Class';
         mount.innerHTML =
@@ -3565,6 +3572,7 @@
 
       window.CONFIRM = {
         dismiss: function () {
+          _pendingConfirmLog = null;
           document.getElementById('confirmOverlayMount').innerHTML = '';
         },
         resolve: async function (logId, subjectId, status) {
@@ -3573,8 +3581,8 @@
             if (res.error) throw res.error;
             if (status === 'present' || status === 'absent') {
               var field = status === 'present' ? 'attended' : 'missed';
-              if (log.schedule_id) {
-                var counts = getSlotCounts(log.schedule_id);
+              if (_pendingConfirmLog && _pendingConfirmLog.schedule_id) {
+                var counts = getSlotCounts(_pendingConfirmLog.schedule_id);
                 counts[field] = (counts[field] || 0) + 1;
                 saveSlotCounts();
                 syncSubjectAttendanceFromSlots(subjectId);
