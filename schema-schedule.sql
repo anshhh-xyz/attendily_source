@@ -5,8 +5,14 @@ create table class_schedule (
   day_of_week int not null check (day_of_week between 0 and 6),
   start_time time not null,
   end_time time not null,
+  attended int not null default 0,
+  missed int not null default 0,
   created_at timestamptz default now()
 );
+
+-- Migration for existing databases:
+alter table class_schedule add column if not exists attended int not null default 0;
+alter table class_schedule add column if not exists missed int not null default 0;
 
 alter table class_schedule enable row level security;
 

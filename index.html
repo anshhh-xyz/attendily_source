@@ -1852,6 +1852,13 @@
 
       function getSlotCounts(slotId) {
         if (!slotId) return null;
+        var slot = schedule.find(function (x) { return x.id === slotId; });
+        if (slot) {
+          if (typeof slot.attended !== 'number') slot.attended = 0;
+          if (typeof slot.missed !== 'number') slot.missed = 0;
+          slotCounts[slotId] = { attended: slot.attended, missed: slot.missed };
+          return slot;
+        }
         if (!slotCounts[slotId]) {
           slotCounts[slotId] = { attended: 0, missed: 0 };
         }
@@ -1880,13 +1887,23 @@
           var sSlots = slotsForSubject(s.id);
           if (sSlots.length === 0) return;
 
-          // Check if any slot has existing counts
-          var hasExisting = sSlots.some(function (slot) { return !!slotCounts[slot.id]; });
+          // Check if slots already have counts in database
+          var totalInSlots = sSlots.reduce(function (sum, slot) {
+            return sum + (slot.attended || 0) + (slot.missed || 0);
+          }, 0);
 
-          if (!hasExisting) {
-            // First time setup: distribute existing subject attendance cleanly
+          if (totalInSlots > 0) {
+            // Populate local cache from DB and sync totals
+            sSlots.forEach(function (slot) {
+              slotCounts[slot.id] = { attended: slot.attended || 0, missed: slot.missed || 0 };
+            });
+            syncSubjectAttendanceFromSlots(s.id);
+          } else if ((s.attended || 0) + (s.missed || 0) > 0) {
+            // First time migration: distribute existing subject attendance cleanly to slots
             if (sSlots.length === 1) {
-              slotCounts[sSlots[0].id] = { attended: s.attended || 0, missed: s.missed || 0 };
+              sSlots[0].attended = s.attended || 0;
+              sSlots[0].missed = s.missed || 0;
+              slotCounts[sSlots[0].id] = { attended: sSlots[0].attended, missed: sSlots[0].missed };
             } else {
               var baseAtt = Math.floor((s.attended || 0) / sSlots.length);
               var remAtt = (s.attended || 0) % sSlots.length;
@@ -1894,21 +1911,21 @@
               var remMiss = (s.missed || 0) % sSlots.length;
 
               sSlots.forEach(function (slot, idx) {
-                slotCounts[slot.id] = {
-                  attended: baseAtt + (idx < remAtt ? 1 : 0),
-                  missed: baseMiss + (idx < remMiss ? 1 : 0)
-                };
+                slot.attended = baseAtt + (idx < remAtt ? 1 : 0);
+                slot.missed = baseMiss + (idx < remMiss ? 1 : 0);
+                slotCounts[slot.id] = { attended: slot.attended, missed: slot.missed };
               });
             }
-          } else {
-            // Ensure all slots exist in slotCounts
+            // Save to DB in background
             sSlots.forEach(function (slot) {
-              if (!slotCounts[slot.id]) {
-                slotCounts[slot.id] = { attended: 0, missed: 0 };
-              }
+              supabase.from('class_schedule').update({ attended: slot.attended, missed: slot.missed }).eq('id', slot.id).then(function () {});
             });
-            // Keep subject totals in sync with sum of slots
-            syncSubjectAttendanceFromSlots(s.id);
+          } else {
+            sSlots.forEach(function (slot) {
+              if (typeof slot.attended !== 'number') slot.attended = 0;
+              if (typeof slot.missed !== 'number') slot.missed = 0;
+              slotCounts[slot.id] = { attended: 0, missed: 0 };
+            });
           }
         });
         saveSlotCounts();
@@ -2917,11 +2934,16 @@
           var s = subjects.find(function (x) { return x.id === id; });
           if (!s) return;
           var prevSubjectVal = s[field];
+          var prevSlotVal = 0;
+          var slotObj = null;
 
           if (slotId) {
+            slotObj = schedule.find(function (x) { return x.id === slotId; });
             var counts = getSlotCounts(slotId);
-            var prevSlotVal = counts[field] || 0;
-            counts[field] = Math.max(0, prevSlotVal + delta);
+            prevSlotVal = counts[field] || 0;
+            var newVal = Math.max(0, prevSlotVal + delta);
+            counts[field] = newVal;
+            if (slotObj) slotObj[field] = newVal;
             saveSlotCounts();
             syncSubjectAttendanceFromSlots(id);
           } else {
@@ -2930,19 +2952,25 @@
 
           render();
 
-          var patch = {
-            attended: s.attended,
-            missed: s.missed
-          };
-
           try {
-            var res = await supabase.from('subjects').update(patch).eq('id', id);
-            if (res.error) throw res.error;
+            if (slotId && slotObj) {
+              var schedUpdate = await supabase.from('class_schedule')
+                .update({ attended: slotObj.attended, missed: slotObj.missed })
+                .eq('id', slotId);
+              if (schedUpdate.error) throw schedUpdate.error;
+            }
+
+            var subUpdate = await supabase.from('subjects')
+              .update({ attended: s.attended, missed: s.missed })
+              .eq('id', id);
+            if (subUpdate.error) throw subUpdate.error;
+
             showStatus(null);
           } catch (e) {
             if (slotId) {
               var c = getSlotCounts(slotId);
               c[field] = prevSlotVal;
+              if (slotObj) slotObj[field] = prevSlotVal;
               saveSlotCounts();
               syncSubjectAttendanceFromSlots(id);
             } else {
@@ -3409,37 +3437,68 @@
           }
         },
         confirmImport: async function () {
-          if (!importDraft) return;
+          if (!importDraft || !importDraft.length) return;
           var nameToId = {};
-          subjects.forEach(function (s) { nameToId[s.name.toLowerCase()] = s.id; });
+          subjects.forEach(function (s) { nameToId[s.name.toLowerCase().trim()] = s.id; });
+
           var newSubjects = [];
+          var seenNew = new Set();
+
           importDraft.forEach(function (row) {
-            var key = row.subject_name.toLowerCase();
-            if (!nameToId[key]) {
-              newSubjects.push({ name: row.subject_name, type: row.type === 'lab' ? 'lab' : 'theory', min_attendance: 75, attended: 0, missed: 0 });
+            var rawName = (row.subject_name || '').trim();
+            if (!rawName) return;
+            var key = rawName.toLowerCase();
+            if (!nameToId[key] && !seenNew.has(key)) {
+              seenNew.add(key);
+              newSubjects.push({
+                name: rawName,
+                type: row.type === 'lab' ? 'lab' : 'theory',
+                min_attendance: 75,
+                attended: 0,
+                missed: 0
+              });
             }
           });
+
           try {
-            if (newSubjects.length) {
+            if (newSubjects.length > 0) {
               var insertRes = await supabase.from('subjects').insert(newSubjects).select();
               if (insertRes.error) throw insertRes.error;
-              insertRes.data.forEach(function (s) { nameToId[s.name.toLowerCase()] = s.id; subjects.push(rowToLocal(s)); });
+              insertRes.data.forEach(function (s) {
+                nameToId[s.name.toLowerCase().trim()] = s.id;
+                subjects.push(rowToLocal(s));
+              });
             }
+
             var toInsert = [];
             importDraft.forEach(function (row) {
-              var subjectId = nameToId[row.subject_name.toLowerCase()];
-              if (subjectId) {
-                toInsert.push({ subject_id: subjectId, day_of_week: row.day_of_week, start_time: row.start_time, end_time: row.end_time });
+              var rawName = (row.subject_name || '').trim();
+              var subjectId = nameToId[rawName.toLowerCase()];
+              // Map day_of_week (1-6 Mon-Sat)
+              var dayNum = typeof row.day_of_week === 'number' ? row.day_of_week : parseInt(row.day_of_week, 10);
+              if (subjectId && dayNum >= 0 && dayNum <= 6) {
+                toInsert.push({
+                  subject_id: subjectId,
+                  day_of_week: dayNum,
+                  start_time: row.start_time,
+                  end_time: row.end_time,
+                  attended: 0,
+                  missed: 0
+                });
               }
             });
-            var res = await supabase.from('class_schedule').insert(toInsert);
-            if (res.error) throw res.error;
+
+            if (toInsert.length > 0) {
+              var res = await supabase.from('class_schedule').insert(toInsert);
+              if (res.error) throw res.error;
+            }
+
             importDraft = null;
             showSchedule = false;
             document.getElementById('scheduleMount').innerHTML = '';
             showStatus('Timetable parsed & added into day tabs successfully!', false);
-            render();
             await loadSchedule();
+            render();
           } catch (e) {
             showStatus("Couldn't import timetable: " + e.message, true);
           }
