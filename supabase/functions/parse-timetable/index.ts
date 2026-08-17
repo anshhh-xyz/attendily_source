@@ -7,15 +7,15 @@ function buildPrompt(groupPreference?: string): string {
   let groupInstruction = "";
   if (groupPreference && groupPreference !== "all") {
     if (groupPreference === "group_1") {
-      groupInstruction = "\n- LAB GROUP / BATCH FILTER: If a time slot cell is split into multiple parallel groups/sub-batches (e.g. Group 1, Group 2, Group 3 or multiple stacked lines/teachers), parse ONLY the 1st / top listed group (Group 1 / Batch A) and skip other parallel groups for that slot. However, for any regular lecture or single-batch class that is NOT split, ALWAYS parse it normally.";
+      groupInstruction = "\n- LAB GROUP / BATCH FILTER: The student is in Group 1 / Batch A. If a cell contains multiple parallel stacked groups/teachers, parse ONLY the 1st / top listed group (Group 1) and ignore other parallel groups in that cell. If a lab is scheduled on a day ONLY for other groups (and not Group 1), do NOT assign that lab to Group 1.";
     } else if (groupPreference === "group_2") {
-      groupInstruction = "\n- LAB GROUP / BATCH FILTER: If a time slot cell is split into multiple parallel groups/sub-batches (e.g. Group 1, Group 2, Group 3 or multiple stacked lines/teachers), parse ONLY the 2nd / middle listed group (Group 2 / Batch B) and skip other parallel groups for that slot. However, for any regular lecture or single-batch class that is NOT split, ALWAYS parse it normally.";
+      groupInstruction = "\n- LAB GROUP / BATCH FILTER: The student is in Group 2 / Batch B. If a cell contains multiple parallel stacked groups/teachers, parse ONLY the 2nd / middle listed group (Group 2) and ignore other parallel groups in that cell. If a lab is scheduled on a day ONLY for other groups (and not Group 2), do NOT assign that lab to Group 2.";
     } else if (groupPreference === "group_3") {
-      groupInstruction = "\n- LAB GROUP / BATCH FILTER: If a time slot cell is split into multiple parallel groups/sub-batches (e.g. Group 1, Group 2, Group 3 or multiple stacked lines/teachers), parse ONLY the 3rd listed group (Group 3 / Batch C) and skip other parallel groups for that slot. However, for any regular lecture or single-batch class that is NOT split, ALWAYS parse it normally.";
+      groupInstruction = "\n- LAB GROUP / BATCH FILTER: The student is in Group 3 / Batch C. If a cell contains multiple parallel stacked groups/teachers, parse ONLY the 3rd listed group (Group 3) and ignore other parallel groups in that cell. If a lab is scheduled on a day ONLY for other groups (and not Group 3), do NOT assign that lab to Group 3.";
     } else if (groupPreference === "group_4") {
-      groupInstruction = "\n- LAB GROUP / BATCH FILTER: If a time slot cell is split into multiple parallel groups/sub-batches, parse ONLY the 4th listed group (Group 4 / Batch D) and skip other parallel groups for that slot. However, for any regular lecture or single-batch class that is NOT split, ALWAYS parse it normally.";
+      groupInstruction = "\n- LAB GROUP / BATCH FILTER: The student is in Group 4 / Batch D. If a cell contains multiple parallel stacked groups/teachers, parse ONLY the 4th listed group (Group 4) and ignore other parallel groups in that cell. If a lab is scheduled on a day ONLY for other groups (and not Group 4), do NOT assign that lab to Group 4.";
     } else {
-      groupInstruction = `\n- LAB GROUP / BATCH FILTER: The student is in: "${groupPreference}". If a cell is split across multiple parallel batches/teachers/groups, parse ONLY the class matching "${groupPreference}". However, for any regular lecture or single-batch class that is NOT split, ALWAYS parse it normally.`;
+      groupInstruction = `\n- LAB GROUP / BATCH FILTER: The student is in: "${groupPreference}". If a cell is split across multiple parallel batches/teachers/groups, parse ONLY the class matching "${groupPreference}". If a lab is scheduled on a day ONLY for other groups, do NOT assign that lab to this student.`;
     }
   }
 
@@ -23,7 +23,10 @@ function buildPrompt(groupPreference?: string): string {
 Return ONLY a valid JSON array, no prose, no markdown fences. Each item must look like:
 {"subject_name": "string", "type": "theory" or "lab", "day_of_week": 1-6 (1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday), "start_time": "HH:MM" in 24hr, "end_time": "HH:MM" in 24hr}
 If a cell spans a lab block, mark type as "lab". If you cannot read a cell confidently, skip it rather than guessing.
-CRITICAL UNIVERSAL RULE: Never drop regular full-class lectures or single-batch classes. If a cell or the entire timetable is for a single batch with no internal splits, ALWAYS parse all classes normally without dropping anything.${groupInstruction}`;
+
+CRITICAL RULES:
+1. FULL-CLASS LECTURES: Never drop regular full-class lectures, common periods (Library/Sports), or single-batch classes. If a cell has no internal group splits, ALWAYS parse it normally for that day.
+2. ROTATIONAL LABS & FREE PERIODS: If a lab is scheduled on a specific day only for certain batches (and the student's batch has an off/free period or their turn is on a different day), do NOT assign other batches' labs to the student.${groupInstruction}`;
 }
 
 async function callGemini(apiKey: string, model: string, mimeType: string, base64Data: string, promptText: string) {
